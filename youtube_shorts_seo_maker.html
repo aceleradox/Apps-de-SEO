@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shorts SEO Maker - Otimizador de Vídeos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        yt: {
+                            red: '#FF0000',
+                            darkRed: '#CC0000',
+                            black: '#0F0F0F',
+                            card: '#1F1F1F',
+                            border: '#2F2F2F',
+                            textSecondary: '#AAAAAA'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0F0F0F;
+            color: #F1F1F1;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1F1F1F;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3F3F3F;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #FF0000;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased selection:bg-red-600 selection:text-white">
+
+    <!-- Header/Navigation -->
+    <header class="border-b border-yt-border bg-yt-black sticky top-0 z-50 px-4 py-3 sm:px-6">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-yt-red p-2 rounded-xl flex items-center justify-center shadow-lg shadow-red-600/20">
+                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 12c0 3.86-3.14 7-7 7s-7-3.14-7-7 3.14-7 7-7 7 3.14 7 7zm-8-3.5v7l6-3.5-6-3.5z"/>
+                        <path d="M17.22 2.54c1.19.7 2.18 1.69 2.88 2.88l-1.37.8c-.56-.95-1.35-1.74-2.31-2.3l.8-1.38zm-10.44 0l.8 1.38c-.96.56-1.75 1.35-2.31 2.3l-1.37-.8c.7-1.19 1.69-2.18 2.88-2.88zM2.54 6.78c-.7 1.19-1.14 2.51-1.14 3.91l1.58.1c.05-1.12.39-2.18.94-3.13l-1.38-.88zm18.92 0l-1.38.88c.55.95.89 2.01.94 3.13l1.58-.1c0-1.4-.44-2.72-1.14-3.91zM1.4 13.31c.05 1.4.49 2.72 1.14 3.91l1.38-.88c-.55-.95-.89-2.01-.94-3.13l-1.58-.1zm21.2 0l-1.58.1c-.05 1.12-.39 2.18-.94 3.13l1.38.88c.7-1.19 1.14-2.51 1.14-3.91zm-15.82 3.91l-1.37.8c.7 1.19 1.69 2.18 2.88 2.88l.8-1.38c-.96-.56-1.75-1.35-2.31-2.3zm10.44 0c-.56.95-1.35 1.74-2.31 2.3l.8 1.38c1.19-.7 2.18-1.69 2.88-2.88l-1.37-.8z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight flex items-center gap-2">
+                        YouTube <span class="bg-yt-red px-2 py-0.5 rounded text-white text-sm font-bold tracking-normal uppercase">Shorts</span>
+                    </h1>
+                    <p class="text-xs text-yt-textSecondary">SEO & Metadata Optimization Engine</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button onclick="loadTemplate('gaming')" class="text-xs bg-yt-card border border-yt-border hover:bg-yt-border px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-gamepad text-red-500"></i> Gamer
+                </button>
+                <button onclick="loadTemplate('educational')" class="text-xs bg-yt-card border border-yt-border hover:bg-yt-border px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-graduation-cap text-blue-400"></i> Tutorial
+                </button>
+                <button onclick="loadTemplate('curiosity')" class="text-xs bg-yt-card border border-yt-border hover:bg-yt-border px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-lightbulb text-yellow-400"></i> Curiosidades
+                </button>
+                <button onclick="clearAll()" class="text-xs bg-red-900/20 text-red-400 hover:bg-red-900/40 border border-red-900/50 px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-trash-can"></i> Limpar
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Column: Inputs Form -->
+        <section class="lg:col-span-7 flex flex-col gap-6">
+            
+            <!-- STEP 1: Video Base Specs -->
+            <div class="bg-yt-card p-5 rounded-2xl border border-yt-border shadow-md">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="w-7 h-7 rounded-full bg-yt-red flex items-center justify-center text-xs font-bold text-white">1</span>
+                    <h2 class="text-base font-bold text-white">Informações Principais</h2>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Title Input -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label for="video-title" class="text-sm font-semibold text-gray-200">Título do Shorts</label>
+                            <span id="title-counter" class="text-xs text-yt-textSecondary">0 / 60</span>
+                        </div>
+                        <input type="text" id="video-title" oninput="updateSEO()" placeholder="Ex: Como viralizar no YouTube Shorts em 3 Passos!" class="w-full bg-black border border-yt-border focus:border-yt-red focus:ring-1 focus:ring-yt-red rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition">
+                        <p class="text-[11px] text-yt-textSecondary mt-1">Dica: Títulos com menos de 60 caracteres performam melhor nos Shorts!</p>
+                    </div>
+
+                    <!-- Emoji Quick Selectors -->
+                    <div>
+                        <span class="text-xs font-medium text-yt-textSecondary block mb-1.5">Adicionar Emojis Rápidos:</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <button onclick="insertEmoji('🔥')" class="bg-black hover:bg-yt-border px-2 py-1 rounded text-sm border border-yt-border transition">🔥</button>
+                            <button onclick="insertEmoji('🚨')" class="bg-black hover:bg-yt-border px-2 py-1 rounded text-sm border border-yt-border transition">🚨</button>
+                            <button onclick="insertEmoji('😱')" class="bg-black hover:bg-yt-border px-2 py-1 rounded text-sm border border-yt-border transition">😱</button>
+                            <button onclick="insertEmoji('💡')" class="bg-black hover:bg-yt-border px-2 py-1 rounded text-sm border border-yt-border transition">💡</button>
+                            <button onclick="insertEmoji('👇')" class="bg-black hover:bg-yt-border px-2 py-1 rounded text-sm border border-yt-border transition">👇</button>
+                            <button onclick="insertEmoji('✅')" class="bg-black hover:bg-yt-border px-2 py-1 rounded text-sm border border-yt-border transition">✅</button>
+                            <button onclick="insertEmoji('👑')" class="bg-black hover:bg-yt-border px-2 py-1 rounded text-sm border border-yt-border transition">👑</button>
+                            <button onclick="insertEmoji('🚀')" class="bg-black hover:bg-yt-border px-2 py-1 rounded text-sm border border-yt-border transition">🚀</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2: Structural Description Builder -->
+            <div class="bg-yt-card p-5 rounded-2xl border border-yt-border shadow-md">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="w-7 h-7 rounded-full bg-yt-red flex items-center justify-center text-xs font-bold text-white">2</span>
+                    <h2 class="text-base font-bold text-white">Gerador de Descrição Estruturada</h2>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- About the video -->
+                    <div>
+                        <label for="desc-about" class="text-xs font-semibold text-gray-300 block mb-1">Sobre o Vídeo (Gancho Inicial)</label>
+                        <textarea id="desc-about" oninput="updateSEO()" rows="2" placeholder="Ex: Neste Shorts vou revelar os bastidores de como as visualizações funcionam..." class="w-full bg-black border border-yt-border focus:border-yt-red focus:ring-1 focus:ring-yt-red rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-600 outline-none transition resize-y"></textarea>
+                    </div>
+
+                    <!-- What happens -->
+                    <div>
+                        <label for="desc-happen" class="text-xs font-semibold text-gray-300 block mb-1">O que acontece no vídeo (Spoiler / Pontos Fortes)</label>
+                        <textarea id="desc-happen" oninput="updateSEO()" rows="2" placeholder="Ex: Assista até o final para ver o teste ao vivo que fiz e se surpreenda com a taxa de retenção!" class="w-full bg-black border border-yt-border focus:border-yt-red focus:ring-1 focus:ring-yt-red rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-600 outline-none transition resize-y"></textarea>
+                    </div>
+
+                    <!-- Content Details -->
+                    <div>
+                        <label for="desc-content" class="text-xs font-semibold text-gray-300 block mb-1">Fale um pouco sobre o assunto / nicho</label>
+                        <textarea id="desc-content" oninput="updateSEO()" rows="2" placeholder="Ex: O algoritmo do Shorts recompensa retenção e CTR. Compreender isso é o segredo para crescer rápido em 2026." class="w-full bg-black border border-yt-border focus:border-yt-red focus:ring-1 focus:ring-yt-red rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-600 outline-none transition resize-y"></textarea>
+                    </div>
+
+                    <!-- Thanks / Call to Action -->
+                    <div>
+                        <label for="desc-thanks" class="text-xs font-semibold text-gray-300 block mb-1">Agradecimento & CTA (Inscrição)</label>
+                        <input type="text" id="desc-thanks" oninput="updateSEO()" placeholder="Ex: Muito obrigado por assistir! Se gostou, deixe seu like e inscreva-se para mais dicas rápidas!" class="w-full bg-black border border-yt-border focus:border-yt-red focus:ring-1 focus:ring-yt-red rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-600 outline-none transition">
+                    </div>
+
+                    <!-- Social Networks -->
+                    <div>
+                        <label for="desc-socials" class="text-xs font-semibold text-gray-300 block mb-1">Redes Sociais & Links</label>
+                        <textarea id="desc-socials" oninput="updateSEO()" rows="2" placeholder="Ex: 📸 Instagram: @seuusuario &#10;🌐 TikTok: @seuusuario" class="w-full bg-black border border-yt-border focus:border-yt-red focus:ring-1 focus:ring-yt-red rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-600 outline-none transition resize-y"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 3: Recommended Hashtags -->
+            <div class="bg-yt-card p-5 rounded-2xl border border-yt-border shadow-md">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-full bg-yt-red flex items-center justify-center text-xs font-bold text-white">3</span>
+                        <h2 class="text-base font-bold text-white">Recomendador de Hashtags</h2>
+                    </div>
+                    <span id="selected-tags-count" class="text-xs text-yt-textSecondary font-semibold bg-black px-2 py-1 rounded-md">0 Selecionadas</span>
+                </div>
+
+                <!-- Custom Hashtag Search / Adder -->
+                <div class="flex gap-2 mb-4">
+                    <input type="text" id="custom-hashtag" placeholder="Adicionar hashtag personalizada..." class="flex-grow bg-black border border-yt-border focus:border-yt-red focus:ring-1 focus:ring-yt-red rounded-xl px-4 py-2 text-xs text-white placeholder-gray-500 outline-none transition">
+                    <button onclick="addCustomHashtag()" class="bg-yt-red hover:bg-yt-darkRed text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1">
+                        <i class="fa-solid fa-plus"></i> Add
+                    </button>
+                </div>
+
+                <!-- Suggested categories selection -->
+                <div class="mb-3">
+                    <span class="text-xs font-semibold text-yt-textSecondary block mb-2">Selecione as melhores Tags para Shorts:</span>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-4">
+                        <button onclick="loadHashtags('viral')" class="text-left bg-black hover:bg-yt-border border border-yt-border rounded-lg p-2 text-[11px] font-medium transition flex items-center justify-between">
+                            <span>🚀 Virais Gerais</span>
+                            <i class="fa-solid fa-chevron-right text-[9px] text-yt-textSecondary"></i>
+                        </button>
+                        <button onclick="loadHashtags('gaming')" class="text-left bg-black hover:bg-yt-border border border-yt-border rounded-lg p-2 text-[11px] font-medium transition flex items-center justify-between">
+                            <span>🎮 Gamer/Jogos</span>
+                            <i class="fa-solid fa-chevron-right text-[9px] text-yt-textSecondary"></i>
+                        </button>
+                        <button onclick="loadHashtags('tech')" class="text-left bg-black hover:bg-yt-border border border-yt-border rounded-lg p-2 text-[11px] font-medium transition flex items-center justify-between">
+                            <span>💻 Tech & Info</span>
+                            <i class="fa-solid fa-chevron-right text-[9px] text-yt-textSecondary"></i>
+                        </button>
+                        <button onclick="loadHashtags('vlog')" class="text-left bg-black hover:bg-yt-border border border-yt-border rounded-lg p-2 text-[11px] font-medium transition flex items-center justify-between">
+                            <span>🌟 Lifestyle/Vlogs</span>
+                            <i class="fa-solid fa-chevron-right text-[9px] text-yt-textSecondary"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dynamic Hashtags Pool (Togglable) -->
+                <div id="hashtags-pool" class="flex flex-wrap gap-1.5 max-h-[140px] overflow-y-auto p-2 bg-black rounded-xl border border-yt-border">
+                    <!-- Dynamic hashtags injected here -->
+                </div>
+                <div class="text-[10px] text-yt-textSecondary mt-2 flex justify-between">
+                    <span>* Recomendação: Use de 3 a 5 hashtags focadas nos Shorts.</span>
+                    <button onclick="clearHashtags()" class="text-red-400 hover:underline">Limpar selecionadas</button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Right Column: Outputs & Live Preview -->
+        <section class="lg:col-span-5 flex flex-col gap-6">
+
+            <!-- Realtime Quality SEO Score -->
+            <div class="bg-yt-card p-5 rounded-2xl border border-yt-border shadow-md">
+                <h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-gauge-high text-yt-red"></i> SEO Score & Otimização
+                </h3>
+                
+                <!-- Score Bar -->
+                <div class="relative pt-1 mb-4">
+                    <div class="flex mb-2 items-center justify-between">
+                        <div>
+                            <span id="score-badge" class="text-xs font-semibold inline-block py-1 px-2.5 uppercase rounded-full text-red-100 bg-red-600">
+                                Baixo
+                            </span>
+                        </div>
+                        <div class="text-right">
+                            <span id="score-text" class="text-sm font-bold text-white">0%</span>
+                        </div>
+                    </div>
+                    <div class="overflow-hidden h-2.5 text-xs flex rounded-full bg-black border border-yt-border">
+                        <div id="score-bar" style="width: 0%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-yt-red transition-all duration-500"></div>
+                    </div>
+                </div>
+
+                <!-- Analysis Checklist -->
+                <div class="space-y-2">
+                    <div class="flex items-center gap-2 text-xs" id="chk-title">
+                        <i class="fa-solid fa-circle-xmark text-red-500"></i>
+                        <span class="text-yt-textSecondary">Inseriu título ideal (20-60 caracteres)</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs" id="chk-emoji">
+                        <i class="fa-solid fa-circle-xmark text-red-500"></i>
+                        <span class="text-yt-textSecondary">Contém emojis atrativos no título</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs" id="chk-desc-len">
+                        <i class="fa-solid fa-circle-xmark text-red-500"></i>
+                        <span class="text-yt-textSecondary">Descrição detalhada preenchida</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs" id="chk-tags">
+                        <i class="fa-solid fa-circle-xmark text-red-500"></i>
+                        <span class="text-yt-textSecondary">Mínimo de 3 hashtags selecionadas</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs" id="chk-shorts-tag">
+                        <i class="fa-solid fa-circle-xmark text-red-500"></i>
+                        <span class="text-yt-textSecondary">Hashtag #shorts incluída</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- YouTube Shorts Preview Simulator -->
+            <div class="bg-yt-card rounded-2xl border border-yt-border shadow-md overflow-hidden flex flex-col">
+                <div class="bg-yt-border px-4 py-3 flex items-center justify-between">
+                    <span class="text-xs font-bold text-white tracking-wider uppercase flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Preview ao Vivo no App
+                    </span>
+                    <i class="fa-solid fa-mobile-screen-button text-yt-textSecondary"></i>
+                </div>
+                
+                <!-- Simulated Phone Screen Aspect for Shorts -->
+                <div class="bg-[#050505] p-4 flex flex-col justify-between aspect-[9/10] relative max-w-sm mx-auto w-full">
+                    
+                    <!-- Top interface -->
+                    <div class="flex justify-between items-center text-xs text-white/40">
+                        <span class="font-medium">Inscrições</span>
+                        <span class="font-bold underline underline-offset-4 decoration-yt-red decoration-2">Para você</span>
+                        <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                    </div>
+
+                    <!-- Center play icon (aesthetic) -->
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10">
+                        <i class="fa-solid fa-play text-8xl text-white"></i>
+                    </div>
+
+                    <!-- Bottom HUD over video -->
+                    <div class="mt-auto space-y-3 z-10">
+                        <!-- Channel bar -->
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-neutral-800 border border-white/20 flex items-center justify-center text-xs font-bold">YT</div>
+                            <div>
+                                <div class="text-xs font-bold text-white">@seu_canal</div>
+                                <span class="bg-yt-red text-[9px] px-1.5 py-0.5 rounded text-white font-extrabold uppercase">Inscrever-se</span>
+                            </div>
+                        </div>
+
+                        <!-- Video Title & Tags in Shorts HUD overlay -->
+                        <div class="text-xs text-white">
+                            <span id="preview-title" class="font-medium text-white line-clamp-2 block">Escreva um título...</span>
+                            <span id="preview-tags" class="text-blue-400 font-semibold block mt-1 line-clamp-1">#shorts #youtube</span>
+                        </div>
+                    </div>
+
+                    <!-- Right side Action HUD icons -->
+                    <div class="absolute right-3 bottom-12 flex flex-col items-center gap-4 text-white/80 z-10">
+                        <div class="flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-lg hover:bg-white/20 cursor-pointer"><i class="fa-solid fa-thumbs-up"></i></div>
+                            <span class="text-[10px] mt-1 font-semibold">Gostei</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-lg hover:bg-white/20 cursor-pointer"><i class="fa-solid fa-thumbs-down"></i></div>
+                            <span class="text-[10px] mt-1 font-semibold">Não gostei</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-lg hover:bg-white/20 cursor-pointer"><i class="fa-solid fa-comment"></i></div>
+                            <span class="text-[10px] mt-1 font-semibold">Comentários</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-lg hover:bg-white/20 cursor-pointer"><i class="fa-solid fa-share"></i></div>
+                            <span class="text-[10px] mt-1 font-semibold">Compartilhar</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action: Generate & Final Copy Panel -->
+            <div class="bg-yt-card p-5 rounded-2xl border border-yt-border shadow-md flex flex-col gap-3">
+                <button onclick="generateCompleteSEO()" class="w-full bg-yt-red hover:bg-yt-darkRed text-white py-3.5 px-6 rounded-xl font-bold tracking-wide shadow-lg shadow-red-600/15 transition transform active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-lg"></i> GERAR SEO COMPLETO
+                </button>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Bottom Result Area (Title, Description, Tags Full view) -->
+    <section class="max-w-7xl w-full mx-auto px-4 sm:px-6 pb-12">
+        <div id="seo-result-box" class="bg-yt-card border border-yt-border rounded-2xl p-6 shadow-xl hidden scroll-mt-20">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-yt-border">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-check text-green-400"></i> Metadados de SEO Gerados!
+                    </h3>
+                    <p class="text-xs text-yt-textSecondary">Copie os blocos otimizados abaixo e cole diretamente na plataforma do YouTube.</p>
+                </div>
+                <button onclick="copyToClipboard('full-package')" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-lg shadow-green-600/10">
+                    <i class="fa-solid fa-copy"></i> Copiar Tudo Juntos
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Title Block -->
+                <div class="bg-black rounded-xl p-4 border border-yt-border flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-semibold text-yt-red uppercase tracking-wider">1. Título do Vídeo</span>
+                            <button onclick="copyToClipboard('title-block')" class="text-yt-textSecondary hover:text-white text-xs flex items-center gap-1">
+                                <i class="fa-regular fa-copy"></i> Copiar
+                            </button>
+                        </div>
+                        <div id="output-title" class="text-sm font-semibold text-white break-words select-all p-3 bg-yt-card rounded-lg min-h-[48px]">
+                            <!-- Generated Title -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description Block -->
+                <div class="bg-black rounded-xl p-4 border border-yt-border flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-semibold text-yt-red uppercase tracking-wider">2. Descrição Estruturada</span>
+                            <button onclick="copyToClipboard('desc-block')" class="text-yt-textSecondary hover:text-white text-xs flex items-center gap-1">
+                                <i class="fa-regular fa-copy"></i> Copiar
+                            </button>
+                        </div>
+                        <pre id="output-desc" class="text-xs text-gray-300 font-sans whitespace-pre-wrap break-words select-all p-3 bg-yt-card rounded-lg min-h-[120px] max-h-[220px] overflow-y-auto">
+                            <!-- Generated Description -->
+                        </pre>
+                    </div>
+                </div>
+
+                <!-- Tags / Hashtags Block -->
+                <div class="bg-black rounded-xl p-4 border border-yt-border flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-semibold text-yt-red uppercase tracking-wider">3. Hashtags & Tags</span>
+                            <button onclick="copyToClipboard('tags-block')" class="text-yt-textSecondary hover:text-white text-xs flex items-center gap-1">
+                                <i class="fa-regular fa-copy"></i> Copiar
+                            </button>
+                        </div>
+                        <div id="output-tags" class="text-xs text-blue-400 font-medium break-words select-all p-3 bg-yt-card rounded-lg min-h-[48px]">
+                            <!-- Generated Tags -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-yt-border bg-black py-6 text-center text-xs text-yt-textSecondary">
+        <p>&copy; 2026 YouTube Shorts SEO Maker. Otimização em conformidade com as diretrizes do algoritmo.</p>
+    </footer>
+
+    <!-- Custom Toast / Feedback UI -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-green-500 text-black px-5 py-3 rounded-xl shadow-2xl font-bold flex items-center gap-2 transform translate-y-20 opacity-0 transition duration-300 pointer-events-none z-50">
+        <i class="fa-solid fa-circle-check text-lg"></i>
+        <span id="toast-message">Copiado com sucesso!</span>
+    </div>
+
+    <!-- Hidden textarea for reliable execCommand clipboard action in environments with restricted permissions -->
+    <textarea id="hidden-copy-area" class="absolute -left-[9999px] top-0 pointer-events-none" aria-hidden="true"></textarea>
+
+    <script>
+        // Preset templates data structures
+        const templates = {
+            gaming: {
+                title: "O SEGREDO dos Pro Players no Valorant! 😱🎯",
+                about: "Revelando o segredo tático que os pro players de Valorant usam para garantir rounds fáceis sem ninguém perceber.",
+                happen: "Assista até o fim para ver a jogada tática explicada passo a passo e use isso nas suas rankeadas hoje mesmo!",
+                content: "Dicas de táticas, gameplays otimizadas e rotinas de treino para subir de elo no Valorant.",
+                thanks: "Inscreva-se no canal para mais dicas de gameplay de Valorant!",
+                socials: "🎮 Twitch: @canal_gameplay\n🐦 Twitter: @canal_gameplay",
+                category: "gaming"
+            },
+            educational: {
+                title: "Como programar em HTML de forma profissional! 💻🔥",
+                about: "Neste Shorts você vai aprender a estruturar um HTML profissional com as melhores práticas de SEO.",
+                happen: "Explicado de um jeito tão simples que até quem nunca escreveu uma linha de código vai conseguir aprender em 1 minuto!",
+                content: "Dicas de desenvolvimento web, truques de CSS e melhores ferramentas para programadores iniciantes.",
+                thanks: "Curta este vídeo se te ajudou e siga-me para mais tutoriais rápidos!",
+                socials: "💻 GitHub: @dev_perfil\n🌐 Website: devpro.com",
+                category: "tech"
+            },
+            curiosity: {
+                title: "3 Curiosidades do Espaço que vão bugar sua mente! 🌌🛰️",
+                about: "Você sabia que existe um planeta onde chove vidro de lado? Assista a estas curiosidades espaciais impressionantes.",
+                happen: "A última curiosidade é tão inacreditável que vai mudar a forma como você enxerga a física do universo!",
+                content: "Fatos astronômicos rápidos, ciência simplificada e mistérios espaciais.",
+                thanks: "Inscreva-se para não perder os próximos mistérios do universo!",
+                socials: "🔭 TikTok: @fatos_espaco\n📸 Instagram: @fatos_espaco",
+                category: "viral"
+            }
+        };
+
+        // Hashtags lists corresponding to categories
+        const hashtagDatabase = {
+            viral: ["#shorts", "#youtubeshorts", "#viral", "#trending", "#fyp", "#shortsbrasil", "#reels", "#fypage", "#hype", "#viralvideo"],
+            gaming: ["#shorts", "#youtubeshorts", "#gaming", "#gamer", "#jogos", "#gameplay", "#gameplaybr", "#highlights", "#twitch", "#playstation", "#xbox", "#pcgaming"],
+            tech: ["#shorts", "#youtubeshorts", "#tecnologia", "#tech", "#programação", "#desenvolvimentoweb", "#html", "#css", "#coding", "#setupgamer", "#ti"],
+            vlog: ["#shorts", "#youtubeshorts", "#vlog", "#lifestyle", "#dailyvlog", "#viagem", "#rotina", "#estilo", "#humor", "#comedia", "#shortsbr"]
+        };
+
+        // Track selected hashtags in current state
+        let selectedHashtags = new Set(["#shorts"]); // Default #shorts active
+
+        window.onload = function() {
+            // Load initial pool of trending/viral hashtags
+            renderHashtagsPool('viral');
+            updateSEO();
+        }
+
+        // Render dynamic buttons in hashtag selection area
+        function renderHashtagsPool(category) {
+            const container = document.getElementById('hashtags-pool');
+            container.innerHTML = '';
+            
+            const tags = hashtagDatabase[category] || hashtagDatabase['viral'];
+            
+            tags.forEach(tag => {
+                const isSelected = selectedHashtags.has(tag);
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = `text-xs px-3 py-1.5 rounded-lg border transition flex items-center gap-1 ${
+                    isSelected 
+                    ? 'bg-yt-red border-yt-red text-white font-semibold' 
+                    : 'bg-yt-card border-yt-border text-gray-300 hover:border-gray-500'
+                }`;
+                button.innerHTML = `${tag} ${isSelected ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}`;
+                button.onclick = () => toggleHashtag(tag);
+                container.appendChild(button);
+            });
+            updateSelectedCounter();
+        }
+
+        function toggleHashtag(tag) {
+            if (selectedHashtags.has(tag)) {
+                selectedHashtags.delete(tag);
+            } else {
+                selectedHashtags.add(tag);
+            }
+            // Re-render pool to preserve UI selected visual
+            const currentCat = document.querySelector('.category-active')?.dataset?.cat || 'viral';
+            renderHashtagsPool(currentCat);
+            updateSEO();
+        }
+
+        function updateSelectedCounter() {
+            document.getElementById('selected-tags-count').innerText = `${selectedHashtags.size} Selecionadas`;
+        }
+
+        function loadHashtags(category) {
+            renderHashtagsPool(category);
+        }
+
+        function addCustomHashtag() {
+            const input = document.getElementById('custom-hashtag');
+            let value = input.value.trim();
+            if (!value) return;
+
+            // Format hashtag prefix
+            if (!value.startsWith('#')) {
+                value = '#' + value;
+            }
+            // Remove illegal spaces/characters
+            value = value.replace(/\s+/g, '').toLowerCase();
+
+            selectedHashtags.add(value);
+            input.value = '';
+            renderHashtagsPool('viral');
+            updateSEO();
+            showToast('Hashtag adicionada!');
+        }
+
+        function clearHashtags() {
+            selectedHashtags.clear();
+            selectedHashtags.add("#shorts"); // Standard default
+            renderHashtagsPool('viral');
+            updateSEO();
+            showToast('Hashtags limpas (mantido #shorts)');
+        }
+
+        function insertEmoji(emoji) {
+            const titleInput = document.getElementById('video-title');
+            titleInput.value += emoji;
+            titleInput.focus();
+            updateSEO();
+        }
+
+        function loadTemplate(key) {
+            const t = templates[key];
+            if (!t) return;
+
+            document.getElementById('video-title').value = t.title;
+            document.getElementById('desc-about').value = t.about;
+            document.getElementById('desc-happen').value = t.happen;
+            document.getElementById('desc-content').value = t.content;
+            document.getElementById('desc-thanks').value = t.thanks;
+            document.getElementById('desc-socials').value = t.socials;
+
+            // Load relative preset hashtags
+            selectedHashtags.clear();
+            hashtagDatabase[t.category].forEach(tag => selectedHashtags.add(tag));
+            
+            renderHashtagsPool(t.category);
+            updateSEO();
+            showToast(`Template '${key}' carregado!`);
+        }
+
+        function clearAll() {
+            document.getElementById('video-title').value = '';
+            document.getElementById('desc-about').value = '';
+            document.getElementById('desc-happen').value = '';
+            document.getElementById('desc-content').value = '';
+            document.getElementById('desc-thanks').value = '';
+            document.getElementById('desc-socials').value = '';
+            selectedHashtags.clear();
+            selectedHashtags.add('#shorts');
+            
+            renderHashtagsPool('viral');
+            updateSEO();
+            
+            // Hide result section
+            document.getElementById('seo-result-box').classList.add('hidden');
+            showToast('Todos os campos foram limpos');
+        }
+
+        // Main function to run real-time updates and calculation
+        function updateSEO() {
+            const title = document.getElementById('video-title').value;
+            const about = document.getElementById('desc-about').value;
+            const happen = document.getElementById('desc-happen').value;
+            const content = document.getElementById('desc-content').value;
+            const thanks = document.getElementById('desc-thanks').value;
+            const socials = document.getElementById('desc-socials').value;
+
+            // Real-time title count
+            document.getElementById('title-counter').innerText = `${title.length} / 60`;
+            if (title.length > 60) {
+                document.getElementById('title-counter').className = 'text-xs text-red-500 font-bold';
+            } else {
+                document.getElementById('title-counter').className = 'text-xs text-yt-textSecondary';
+            }
+
+            // Real-time Mobile Simulation HUD update
+            document.getElementById('preview-title').innerText = title || 'Escreva um título para pré-visualizar...';
+            
+            const arrayTags = Array.from(selectedHashtags);
+            document.getElementById('preview-tags').innerText = arrayTags.length > 0 ? arrayTags.join(' ') : '#shorts';
+
+            // Calculate SEO Score metrics
+            let score = 0;
+            let checks = {
+                title: false,
+                emoji: false,
+                descLen: false,
+                tags: false,
+                shortsTag: false
+            };
+
+            // 1. Title Length rule (optimally 20 to 60)
+            if (title.length >= 20 && title.length <= 60) {
+                score += 30;
+                checks.title = true;
+            } else if (title.length > 0) {
+                score += 15; // partially good
+            }
+
+            // 2. Contains emojis (high CTR on Shorts)
+            const emojiRegex = /[\uD800-\uDFFF\u2600-\u27BF]/;
+            if (emojiRegex.test(title)) {
+                score += 15;
+                checks.emoji = true;
+            }
+
+            // 3. Description complexity (enough parameters inputted)
+            let descStrength = (about ? 1 : 0) + (happen ? 1 : 0) + (content ? 1 : 0) + (thanks ? 1 : 0) + (socials ? 1 : 0);
+            if (descStrength >= 3) {
+                score += 25;
+                checks.descLen = true;
+            } else if (descStrength > 0) {
+                score += 10;
+            }
+
+            // 4. Hashtag count rule (minimum 3 tags, ideally up to 5)
+            if (selectedHashtags.size >= 3) {
+                score += 15;
+                checks.tags = true;
+            }
+
+            // 5. Must include standard shorts trigger
+            if (selectedHashtags.has('#shorts') || selectedHashtags.has('#youtubeshorts')) {
+                score += 15;
+                checks.shortsTag = true;
+            }
+
+            // Limit score ceiling
+            score = Math.min(100, score);
+
+            // Update UI Score Indicators
+            const scoreText = document.getElementById('score-text');
+            const scoreBar = document.getElementById('score-bar');
+            const scoreBadge = document.getElementById('score-badge');
+
+            scoreText.innerText = `${score}%`;
+            scoreBar.style.width = `${score}%`;
+
+            if (score < 40) {
+                scoreBadge.innerText = 'Crítico';
+                scoreBadge.className = 'text-xs font-semibold inline-block py-1 px-2.5 uppercase rounded-full text-red-100 bg-red-600';
+                scoreBar.className = 'shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-600 transition-all duration-500';
+            } else if (score < 75) {
+                scoreBadge.innerText = 'Bom';
+                scoreBadge.className = 'text-xs font-semibold inline-block py-1 px-2.5 uppercase rounded-full text-yellow-100 bg-yellow-500';
+                scoreBar.className = 'shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-yellow-500 transition-all duration-500';
+            } else {
+                scoreBadge.innerText = 'Excelente';
+                scoreBadge.className = 'text-xs font-semibold inline-block py-1 px-2.5 uppercase rounded-full text-green-100 bg-green-600';
+                scoreBar.className = 'shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-500 transition-all duration-500';
+            }
+
+            // Update checklist HTML icons
+            updateChecklistIcon('chk-title', checks.title);
+            updateChecklistIcon('chk-emoji', checks.emoji);
+            updateChecklistIcon('chk-desc-len', checks.descLen);
+            updateChecklistIcon('chk-tags', checks.tags);
+            updateChecklistIcon('chk-shorts-tag', checks.shortsTag);
+        }
+
+        function updateChecklistIcon(elementId, passed) {
+            const container = document.getElementById(elementId);
+            if (passed) {
+                container.innerHTML = `<i class="fa-solid fa-circle-check text-green-500"></i> <span class="text-white">${container.querySelector('span').innerText}</span>`;
+            } else {
+                container.innerHTML = `<i class="fa-solid fa-circle-xmark text-red-500"></i> <span class="text-yt-textSecondary">${container.querySelector('span').innerText}</span>`;
+            }
+        }
+
+        function generateCompleteSEO() {
+            // Read all fields
+            const title = document.getElementById('video-title').value.trim();
+            const about = document.getElementById('desc-about').value.trim();
+            const happen = document.getElementById('desc-happen').value.trim();
+            const content = document.getElementById('desc-content').value.trim();
+            const thanks = document.getElementById('desc-thanks').value.trim();
+            const socials = document.getElementById('desc-socials').value.trim();
+            const arrayTags = Array.from(selectedHashtags);
+
+            // Assemble structured outputs
+            const finalTitle = title || "Título não preenchido";
+            
+            // Build Description String
+            let finalDesc = "";
+            if (about) finalDesc += `📌 SOBRE O VÍDEO:\n${about}\n\n`;
+            if (happen) finalDesc += `👀 O QUE ACONTECE NESTE VÍDEO:\n${happen}\n\n`;
+            if (content) finalDesc += `💡 CONTEÚDO COMPLEMENTAR:\n${content}\n\n`;
+            if (thanks) finalDesc += `💖 AGRADECIMENTO & INSCREVA-SE:\n${thanks}\n\n`;
+            if (socials) finalDesc += `📱 REDES SOCIAIS:\n${socials}\n\n`;
+            
+            // Add tags automatically to the end of the description block as well as YouTube standard formatting
+            if (arrayTags.length > 0) {
+                finalDesc += `HASHTAGS:\n${arrayTags.join(' ')}`;
+            }
+
+            const finalTags = arrayTags.length > 0 ? arrayTags.join(' ') : "#shorts";
+
+            // Inject to block fields
+            document.getElementById('output-title').innerText = finalTitle;
+            document.getElementById('output-desc').innerText = finalDesc || "Preencha a descrição para gerar.";
+            document.getElementById('output-tags').innerText = finalTags;
+
+            // Show results wrapper
+            const resultsBox = document.getElementById('seo-result-box');
+            resultsBox.classList.remove('hidden');
+            
+            // Smooth Scroll down to results on mobile/desktop
+            resultsBox.scrollIntoView({ behavior: 'smooth' });
+
+            showToast("Pacote de SEO compilado abaixo!");
+        }
+
+        function copyToClipboard(blockId) {
+            let textToCopy = "";
+            
+            if (blockId === 'title-block') {
+                textToCopy = document.getElementById('output-title').innerText;
+            } else if (blockId === 'desc-block') {
+                textToCopy = document.getElementById('output-desc').innerText;
+            } else if (blockId === 'tags-block') {
+                textToCopy = document.getElementById('output-tags').innerText;
+            } else if (blockId === 'full-package') {
+                const title = document.getElementById('output-title').innerText;
+                const desc = document.getElementById('output-desc').innerText;
+                textToCopy = `=== TÍTULO DO VÍDEO ===\n${title}\n\n=== DESCRIÇÃO COMPLETA ===\n${desc}`;
+            }
+
+            // Secure Copy execution with Hidden TextArea to satisfy iframe compatibility
+            const copyArea = document.getElementById('hidden-copy-area');
+            copyArea.value = textToCopy;
+            copyArea.select();
+            copyArea.setSelectionRange(0, 99999); // For mobile devices
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast("Copiado com sucesso!");
+                } else {
+                    showToast("Erro ao tentar copiar!");
+                }
+            } catch (err) {
+                showToast("Erro inesperado de área de transferência!");
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = message;
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
