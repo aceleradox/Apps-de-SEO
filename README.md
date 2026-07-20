@@ -2,9 +2,6 @@
 
 O **YouTube Shorts SEO Maker** é uma ferramenta web interativa, leve e 100% responsiva (totalmente compatível com PC e dispositivos Android) desenvolvida para otimizar o alcance e o ranqueamento de vídeos curtos. Com este app, você estrutura títulos magnéticos, constrói descrições perfeitas passo a passo, escolhe hashtags estratégicas e analisa a pontuação de SEO do seu conteúdo antes mesmo de publicar.
 
-![Interface Preview](https://img.shields.io/badge/Interface-Dark%20Mode-red?style=for-the-badge&logo=youtube)
-![Compatibilidade](https://img.shields.io/badge/Compatibilidade-PC%20%2F%20Android-brightgreen?style=for-the-badge)
-![Tecnologias](https://img.shields.io/badge/Feito%20com-HTML5%20%2F%20CSS3%20%2F%20JS-blue?style=for-the-badge)
 
 ---
 
