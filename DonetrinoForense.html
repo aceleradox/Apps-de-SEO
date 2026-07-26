@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DOS Donetrino 2 - Perícia Forense Policial</title>
+
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Fontes Retrô Terminal -->
@@ -237,9 +238,12 @@
                 <div id="forensic-details" class="space-y-2 whitespace-pre-wrap flex-1 text-gray-300">
                     Aguardando seleção de arquivo para varredura de assinatura de vírus e hashes de evidência estatal...
                 </div>
-                <div class="mt-3 pt-2 border-t border-gray-800 flex justify-between items-center">
+                <div class="mt-3 pt-2 border-t border-gray-800 flex flex-wrap gap-2 justify-between items-center">
                     <span id="forensic-status-tag" class="text-gray-500">STATUS: AGUARDANDO</span>
-                    <button id="tag-evidence-btn" onclick="tagCurrentFileAsEvidence()" class="px-3 py-1 bg-yellow-950 border border-yellow-600 text-yellow-300 hover:bg-yellow-800 font-bold hidden">MARCAR COMO EVIDÊNCIA [TAG]</button>
+                    <div class="flex gap-2">
+                        <button id="tag-evidence-btn" onclick="tagCurrentFileAsEvidence()" class="px-3 py-1 bg-yellow-950 border border-yellow-600 text-yellow-300 hover:bg-yellow-800 font-bold hidden">MARCAR COMO EVIDÊNCIA [TAG]</button>
+                        <button id="purge-file-btn" onclick="purgeCurrentFileFromForensic()" class="px-3 py-1 bg-red-950 border border-red-600 text-red-300 hover:bg-red-800 font-bold hidden">EXPURGAR MÓDULO [PURGE]</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -300,6 +304,26 @@
         <div class="text-sm border-t border-white/30 pt-4 flex justify-between items-center">
             <span>REGISTROS DESTRIÚDOS... RESETANDO SISTEMA...</span>
             <button onclick="permadeathResetGame()" class="px-5 py-2 bg-yellow-400 text-black font-bold hover:bg-yellow-300 text-base">REINICIAR INVESTIGAÇÃO DO ZERO [RESET]</button>
+        </div>
+    </div>
+
+    <!-- VICTORY ENDING MODAL -->
+    <div id="victory-modal" class="hidden fixed inset-0 bg-black/95 text-green-400 z-50 p-6 md:p-12 font-mono flex flex-col justify-between border-4 border-green-500">
+        <div class="space-y-4">
+            <div class="bg-green-500 text-black px-3 py-1 inline-block font-bold text-xl">INQUÉRITO CONCLUÍDO - CASO DOS DONETRINO SOLUCIONADO</div>
+            <p class="text-xl md:text-2xl font-bold text-yellow-300">POLÍCIA FEDERAL / DEPT. DE PERÍCIA CIBERNÉTICA</p>
+            <p class="text-sm md:text-base">Parabéns, Perito! Você sobreviveu às 6 madrugadas de puro terror digital e sabotagem estatal no DOS Donetrino. Todas as 18 Evidências Criminais Mestras foram registradas com sucesso e enviadas com criptografia militar ao Ministério da Justiça.</p>
+            
+            <div class="border border-green-800 p-4 bg-green-950/50 space-y-2 text-xs md:text-sm">
+                <p class="text-white font-bold text-base">RESULTADOS DA PERÍCIA:</p>
+                <p>✔ Corporação Donetrino indiciada por tentativa de invasão governamental.</p>
+                <p>✔ Entidade digital e malwares expurgados do Kernel do DOS.</p>
+                <p>✔ O arquivo de acusação oficial foi assinado com seu selo pericial.</p>
+            </div>
+        </div>
+        <div class="text-sm border-t border-green-800 pt-4 flex justify-between items-center">
+            <span class="text-yellow-400 font-bold">STATUS DO CASO: ARQUIVADO E RESOLVIDO [100%]</span>
+            <button onclick="permadeathResetGame()" class="px-5 py-2 bg-green-500 text-black font-bold hover:bg-green-400 text-base">JOGAR NOVAMENTE [REINICIAR NOITE 1]</button>
         </div>
     </div>
 
@@ -389,6 +413,7 @@
         };
 
         // 6 Night System Architecture (6 OS Systems given as a "Gift/Sabotage" to Govt)
+        // Each night has 3 Evidence files (MUST TAG, DO NOT PURGE) + 2 Malware files (MUST PURGE) + 3 Tools
         const nightSystems = {
             1: {
                 name: "DONETRINO OS v1.02 (MILITARY PROCUREMENT)",
@@ -402,17 +427,29 @@
                         evidenceId: "N1_EVIDENCE_CONTRACT",
                         hash: "MD5: 9a8b7c6d5e4f3a2b"
                     },
-                    "DON_KRNL.SYS": {
-                        content: "[DRIVE DE SISTEMA CORROMPIDO]\nDriver militar contendo instrução OCULTA de sobrescrita de memória Heap.\nAviso: Leitura contínua gera vazamento e superaquecimento do processador.",
-                        isEvidence: true,
-                        evidenceId: "N1_EVIDENCE_KERNEL",
-                        hash: "SHA256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-                    },
                     "RELATORIO_SERVIDORES.LOG": {
                         content: "00:12 - Servidor instalado no Palácio.\n01:45 - Falha inexplicável de hardware.\n03:20 - Mensagens em código transmitidas sem linha telefônica conectada.",
                         isEvidence: true,
                         evidenceId: "N1_EVIDENCE_LOG",
                         hash: "MD5: 1122334455667788"
+                    },
+                    "TERMO_DOACAO.DAT": {
+                        content: "CLÁUSULA 19: A Corporação Donetrino exime-se de qualquer responsabilidade por desastres de integridade de dados ocorridos nas madrugadas.",
+                        isEvidence: true,
+                        evidenceId: "N1_EVIDENCE_TERMO",
+                        hash: "SHA256: 77a88b99c00d11e22f"
+                    },
+                    "DON_KRNL.SYS": {
+                        content: "[DRIVE DE SISTEMA CORROMPIDO]\nDriver militar contendo instrução OCULTA de sobrescrita de memória Heap.\nAviso: Leitura contínua gera vazamento e superaquecimento do processador.",
+                        isEvidence: false,
+                        isMalware: true,
+                        hash: "SHA256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                    },
+                    "TROJAN_N1.BAT": {
+                        content: "@ECHO OFF\n:LOOP\nECHO INJECTING CORRUPTION TO KERNEL...\nGOTO LOOP",
+                        isEvidence: false,
+                        isMalware: true,
+                        hash: "MD5: BAD_BATCH_FILE_01"
                     },
                     "FORENSIC.EXE": { content: "[EXECUTÁVEL POLICIAL DE PERÍCIA HEXADECIMAL]", isExe: true },
                     "MEMWATCH.EXE": { content: "[EXECUTÁVEL DE REPARO DE MEMÓRIA E HEAP]", isExe: true },
@@ -442,11 +479,23 @@
                         evidenceId: "N2_EVIDENCE_MEMO",
                         hash: "SHA256: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
                     },
+                    "OFICIO_SABOTAGEM.DOC": {
+                        content: "OFÍCIO CONFIDENCIAL #441: Instruções para que o suporte técnico ignore chamados de sobreaquecimento dos terminais estatais.",
+                        isEvidence: true,
+                        evidenceId: "N2_EVIDENCE_OFICIO",
+                        hash: "MD5: 554433221100"
+                    },
                     "VIRUS_PORT666.SYS": {
                         content: "MÓDULO DE INVASÃO DA PORTA 6667.\nEleva instantaneamente o nível de intrusão da rede.",
-                        isEvidence: true,
-                        evidenceId: "N2_EVIDENCE_VIRUS",
+                        isEvidence: false,
+                        isMalware: true,
                         hash: "MD5: 666766676667"
+                    },
+                    "WORM_NET.DAT": {
+                        content: "VERME DIGITAL AUTOPROPAGÁVEL: Aloca blocos virtuais infinitos no setor de memória Heap.",
+                        isEvidence: false,
+                        isMalware: true,
+                        hash: "SHA256: WORM_OVERFLOW_PACKET"
                     },
                     "FORENSIC.EXE": { content: "[EXECUTÁVEL POLICIAL]", isExe: true },
                     "MEMWATCH.EXE": { content: "[REPARADOR DE RAM]", isExe: true },
@@ -481,6 +530,18 @@
                         evidenceId: "N3_EVIDENCE_DOC",
                         hash: "MD5: 990011223344"
                     },
+                    "PSY_PULSE.SYS": {
+                        content: "DRIVER SUBLIMINAL DE ONDAS GRAVES: Superaquecimento contínuo e forçado dos transistores do processador.",
+                        isEvidence: false,
+                        isMalware: true,
+                        hash: "SHA256: FREQ_MELTDOWN_SYS"
+                    },
+                    "MEM_DRAIN.RAW": {
+                        content: "ARQUIVO DE VAZAMENTO DE SESSÃO: Corrompe 2% do Kernel a cada ciclo de segundo.",
+                        isEvidence: false,
+                        isMalware: true,
+                        hash: "MD5: DRAIN_RAW_BAD"
+                    },
                     "FORENSIC.EXE": { content: "[EXECUTÁVEL POLICIAL]", isExe: true },
                     "MEMWATCH.EXE": { content: "[REPARADOR DE RAM]", isExe: true },
                     "IRC_TAP.EXE": { content: "[ESCUTA IRC]", isExe: true }
@@ -508,11 +569,23 @@
                         evidenceId: "N4_EVIDENCE_NAMES",
                         hash: "MD5: 44332211"
                     },
-                    "REGISTRO_EXPURGO.SYS": {
-                        content: "Instrução para formatar os discos antes da polícia chegar.",
+                    "MINUTA_CUMPLES.TXT": {
+                        content: "REGISTRO DE PROPINA: Pagamento efetuado a intermediários para garantir a doação do DOS Donetrino sem passar por licitação.",
                         isEvidence: true,
-                        evidenceId: "N4_EVIDENCE_EXPURGO",
+                        evidenceId: "N4_EVIDENCE_MINUTA",
+                        hash: "SHA256: BRIBERY_RECORD_1993"
+                    },
+                    "REGISTRO_EXPURGO.SYS": {
+                        content: "MÓDULO DE AUTO-FORMATAÇÃO: Instrução oculta no Kernel para deletar a partição principal antes do relatório pericial.",
+                        isEvidence: false,
+                        isMalware: true,
                         hash: "MD5: 00112233"
+                    },
+                    "FAT_KILLER.DAT": {
+                        content: "SABOTADOR DE TABELA FAT: Destrói os ponteiros de arquivos da pericia policial.",
+                        isEvidence: false,
+                        isMalware: true,
+                        hash: "SHA256: FAT32_DESTRUCTION_VIRUS"
                     },
                     "FORENSIC.EXE": { content: "[EXECUTÁVEL POLICIAL]", isExe: true },
                     "MEMWATCH.EXE": { content: "[REPARADOR DE RAM]", isExe: true },
@@ -535,17 +608,29 @@
                         evidenceId: "N5_EVIDENCE_ORDER",
                         hash: "SHA256: 99988877766655544332211"
                     },
-                    "TROJAN_POLICE.SYS": {
-                        content: "Cavalo de Tróia direcionado ao terminal forense. Eleva a temperatura do processador para 90°C.",
-                        isEvidence: true,
-                        evidenceId: "N5_EVIDENCE_TROJAN",
-                        hash: "MD5: 9900990099"
-                    },
                     "CONFISSAO_DONETRINO.TXT": {
                         content: "MENSAGEM FINAL DO CRIADOR:\n'O DOS Donetrino não é um software. É uma entidade autônoma desenvolvida em laboratório.'",
                         isEvidence: true,
                         evidenceId: "N5_EVIDENCE_CONFESSION",
                         hash: "SHA256: 1111222233334444"
+                    },
+                    "RELATORIO_INTRUSAO.DAT": {
+                        content: "CADERNO DE CAMPO POLICIAL: Detecção de tráfego de dados para antenas ilegais instaladas no telhado do Ministério.",
+                        isEvidence: true,
+                        evidenceId: "N5_EVIDENCE_INTRUSAO",
+                        hash: "MD5: 998877665544"
+                    },
+                    "TROJAN_POLICE.SYS": {
+                        content: "Cavalo de Tróia direcionado ao terminal forense. Eleva a temperatura do processador para 90°C.",
+                        isEvidence: false,
+                        isMalware: true,
+                        hash: "MD5: 9900990099"
+                    },
+                    "BLACKNET_DAEMON.SYS": {
+                        content: "MÓDULO DE INVASÃO DA REDE PURPLE: Injeta falsas requisições IRC continuamente.",
+                        isEvidence: false,
+                        isMalware: true,
+                        hash: "SHA256: DAEMON_PURPLE_ATTACK"
                     },
                     "FORENSIC.EXE": { content: "[EXECUTÁVEL POLICIAL]", isExe: true },
                     "MEMWATCH.EXE": { content: "[REPARADOR DE RAM]", isExe: true },
@@ -567,17 +652,29 @@
                         evidenceId: "N6_EVIDENCE_MASTER",
                         hash: "SHA256: OMEGA_PROOF_ACCEPTED_1993"
                     },
-                    "IA_DONETRINO_CORE.SYS": {
-                        content: "O núcleo vivo da inteligência de sabotagem. Exige comando PURGE ALL /SECURE para neutralização total.",
-                        isEvidence: true,
-                        evidenceId: "N6_EVIDENCE_CORE",
-                        hash: "SHA256: CORE_DESTRUCTION_HASH_666"
-                    },
                     "VEREDITO_POLICIAL.DOC": {
                         content: "RELATÓRIO FINAL DA INVESTIGAÇÃO:\nPronto para ser assinado e enviado ao Ministério da Justiça às 06:00 AM.",
                         isEvidence: true,
                         evidenceId: "N6_EVIDENCE_VERDICT",
                         hash: "MD5: FINAL_VERDICT_OK"
+                    },
+                    "INQUERITO_MINISTERIO.DAT": {
+                        content: "INQUÉRITO PERICIAL COMPLETO: Recompilação de todas as provas recolhidas nas 6 madrugadas contra os sabotadores do DOS Donetrino.",
+                        isEvidence: true,
+                        evidenceId: "N6_EVIDENCE_INQUERITO",
+                        hash: "SHA256: COMPLETE_POLICE_CASE_100"
+                    },
+                    "IA_DONETRINO_CORE.SYS": {
+                        content: "O núcleo vivo da inteligência de sabotagem. Exige comando PURGE para neutralização total das suas rotinas de corrupção.",
+                        isEvidence: false,
+                        isMalware: true,
+                        hash: "SHA256: CORE_DESTRUCTION_HASH_666"
+                    },
+                    "OMEGA_OVERDRIVE.SYS": {
+                        content: "OVERCLOCK FORÇADO DO KERNEL: Dispara a temperatura da CPU diretamente para o nível de colapso térmico.",
+                        isEvidence: false,
+                        isMalware: true,
+                        hash: "MD5: OMEGA_MELTDOWN_666"
                     },
                     "FORENSIC.EXE": { content: "[EXECUTÁVEL POLICIAL]", isExe: true },
                     "MEMWATCH.EXE": { content: "[REPARADOR DE RAM]", isExe: true },
@@ -585,7 +682,7 @@
                 },
                 ircMessages: [
                     "DONETRINO_DEUS: EU SOU O HARDWARE. EU SOU O GOVERNO. EU SOU VOCÊ.",
-                    "DONETRINO_DEUS: Dê PURGE nas evidências ou sofra o BSOD eterno!"
+                    "DONETRINO_DEUS: Dê PURGE nos vírus ou sofra o BSOD eterno!"
                 ]
             }
         };
@@ -618,7 +715,7 @@
             const minStr = gameState.shiftMinute < 10 ? `0${gameState.shiftMinute}` : `${gameState.shiftMinute}`;
             document.getElementById('shift-time').innerText = `${hrStr}:${minStr} AM`;
             
-            // Count evidence tagged for THIS night
+            // Count evidence tagged for THIS night still present in directory
             let nightTaggedCount = 0;
             for (let fName in sys.files) {
                 const f = sys.files[fName];
@@ -780,7 +877,7 @@
                                 found = true;
 
                                 // Inspecting raw virus files increases temp
-                                if (fName.includes('SYS') || fName.includes('VIRUS')) {
+                                if (sysFiles[fName].isMalware || fName.includes('SYS') || fName.includes('VIRUS')) {
                                     gameState.cpuTemp += 5;
                                     printToTerminal("[ALERTA]: O arquivo executou código de estresse no Kernel!", "error");
                                     playGlitchSound();
@@ -846,7 +943,7 @@
                             playBeep(900, 0.1);
                             updateUIHeader();
                         } else {
-                            printToTerminal(`O arquivo '${arg}' não possui valor de prova criminal!`, 'error');
+                            printToTerminal(`O arquivo '${arg}' não possui valor de prova criminal ou é um executável/malware!`, 'error');
                         }
                     }
                     break;
@@ -883,30 +980,7 @@
                     if (!arg) {
                         printToTerminal("Uso incorreto. Sintaxe: PURGE <NOME_DO_ARQUIVO_INFECTADO>", "error");
                     } else {
-                        const sysFiles = nightSystems[gameState.currentNight].files;
-                        let foundKey = null;
-                        for (let fn in sysFiles) {
-                            if (fn.toUpperCase() === arg) { foundKey = fn; break; }
-                        }
-                        if (foundKey) {
-                            printToTerminal(`EXPURGANDO MÓDULO E DESALOCANDO BLOCOS DE '${foundKey}'...`, 'warning');
-                            playGlitchSound();
-                            
-                            if (sysFiles[foundKey].isEvidence) {
-                                printToTerminal(`[ALERTA FORENSE]: O arquivo expurgado possuía valor penal! A prova foi eliminada do disco.`, 'error');
-                            } else {
-                                printToTerminal(`[PURGE CONCLUÍDO]: Módulo desmantelado com sucesso!`, 'success');
-                            }
-
-                            // Substantial heat & corruption relief
-                            gameState.corruption = Math.max(0, gameState.corruption - 20);
-                            gameState.cpuTemp = Math.max(30, gameState.cpuTemp - 15);
-                            
-                            delete sysFiles[foundKey];
-                            updateUIHeader();
-                        } else {
-                            printToTerminal(`Arquivo '${arg}' não encontrado no diretório atual para expurgo.`, "error");
-                        }
+                        executePurgeFile(arg);
                     }
                     break;
 
@@ -943,18 +1017,44 @@
             }
         }
 
+        function executePurgeFile(fileNameUpper) {
+            const sysFiles = nightSystems[gameState.currentNight].files;
+            let foundKey = null;
+            for (let fn in sysFiles) {
+                if (fn.toUpperCase() === fileNameUpper) { foundKey = fn; break; }
+            }
+            if (foundKey) {
+                printToTerminal(`EXPURGANDO MÓDULO E DESALOCANDO BLOCOS DE '${foundKey}'...`, 'warning');
+                playGlitchSound();
+                
+                if (sysFiles[foundKey].isEvidence) {
+                    printToTerminal(`[ALERTA FORENSE]: O arquivo expurgado possuía valor penal! A prova foi eliminada do disco.`, 'error');
+                } else {
+                    printToTerminal(`[PURGE CONCLUÍDO]: Módulo desmantelado com sucesso!`, 'success');
+                }
+
+                // Substantial heat & corruption relief
+                gameState.corruption = Math.max(0, gameState.corruption - 20);
+                gameState.cpuTemp = Math.max(30, gameState.cpuTemp - 15);
+                
+                delete sysFiles[foundKey];
+                updateUIHeader();
+                if (!document.getElementById('forensic-modal').classList.contains('hidden')) {
+                    renderForensicFileList();
+                }
+            } else {
+                printToTerminal(`Arquivo '${fileNameUpper}' não encontrado no diretório atual para expurgo.`, "error");
+            }
+        }
+
         function checkNightCompletion() {
             const sys = nightSystems[gameState.currentNight];
             let nightTaggedCount = 0;
-            let totalNightEvidence = 0;
 
             for (let fName in sys.files) {
                 const f = sys.files[fName];
-                if (f.isEvidence) {
-                    totalNightEvidence++;
-                    if (gameState.taggedEvidence.has(f.evidenceId)) {
-                        nightTaggedCount++;
-                    }
+                if (f.isEvidence && gameState.taggedEvidence.has(f.evidenceId)) {
+                    nightTaggedCount++;
                 }
             }
 
@@ -988,11 +1088,9 @@
                     }, 4000);
                 } else {
                     // BEAT THE ENTIRE GAME!
-                    printToTerminal(`\n==================================================================`, 'success');
-                    printToTerminal(`PARABÉNS, DETETIVE! VOCÊ SOBREVIVEU ÀS 6 NOITES DO DOS DONETRINO!`, 'success');
-                    printToTerminal(`O INQUÉRITO POLICIAL FOI ENVIADO AO MINISTÉRIO DA JUSTIÇA.`, 'success');
-                    printToTerminal(`A SABOTAGEM E A ENTIDADE DIGITAL FORAM EXPURGADAS COM SUCESSO!`, 'success');
-                    printToTerminal(`==================================================================\n`, 'success');
+                    clearInterval(gameState.timerId);
+                    document.getElementById('victory-modal').classList.remove('hidden');
+                    playBeep(1200, 0.5);
                 }
             } else {
                 // Time reached 06:00 AM but failed to collect 3 evidence items!
@@ -1031,7 +1129,8 @@
             for (let fName in files) {
                 const item = document.createElement('div');
                 item.className = 'p-1.5 border border-gray-800 hover:bg-green-950 cursor-pointer transition-all flex justify-between items-center';
-                item.innerHTML = `<span>${fName}</span> <span class="text-gray-500">${files[fName].isExe ? '[EXE]' : '[DAT]'}</span>`;
+                const tag = files[fName].isExe ? '[EXE]' : files[fName].isEvidence ? '[PROVA]' : '[MÓDULO]';
+                item.innerHTML = `<span>${fName}</span> <span class="text-gray-500">${tag}</span>`;
                 item.onclick = () => selectForensicFile(fName, files[fName]);
                 listContainer.appendChild(item);
             }
@@ -1043,15 +1142,17 @@
             
             let html = `CONTEÚDO DO ARQUIVO:\n${fileObj.content}\n\n`;
             html += `HASH DE ASSINATURA: ${fileObj.hash || 'DESCONHECIDO'}\n`;
-            html += `RELEVÂNCIA PENAL: ${fileObj.isEvidence ? 'ALTA (EVIDÊNCIA CRIMINAL)' : 'NENHUMA'}`;
+            html += `RELEVÂNCIA PENAL: ${fileObj.isEvidence ? 'ALTA (EVIDÊNCIA CRIMINAL)' : fileObj.isMalware ? 'CRÍTICA (MÓDULO DE INFECÇÃO / VIRUS)' : 'NENHUMA'}`;
 
             document.getElementById('forensic-details').innerText = html;
 
             const tagBtn = document.getElementById('tag-evidence-btn');
+            const purgeBtn = document.getElementById('purge-file-btn');
             const statusTag = document.getElementById('forensic-status-tag');
 
             if (fileObj.isEvidence) {
                 tagBtn.classList.remove('hidden');
+                purgeBtn.classList.add('hidden');
                 if (gameState.taggedEvidence.has(fileObj.evidenceId)) {
                     statusTag.innerText = "STATUS: JÁ ANEXADO AO INQUÉRITO";
                     statusTag.className = "text-green-400 font-bold";
@@ -1059,9 +1160,15 @@
                     statusTag.innerText = "STATUS: PRONTO PARA REGISTRO";
                     statusTag.className = "text-yellow-400 font-bold";
                 }
+            } else if (!fileObj.isExe) {
+                tagBtn.classList.add('hidden');
+                purgeBtn.classList.remove('hidden');
+                statusTag.innerText = "STATUS: SUSPEITO / EXPURGO RECOMENDADO";
+                statusTag.className = "text-red-400 font-bold";
             } else {
                 tagBtn.classList.add('hidden');
-                statusTag.innerText = "STATUS: ARQUIVO COMUM";
+                purgeBtn.classList.add('hidden');
+                statusTag.innerText = "STATUS: EXECUTÁVEL POLICIAL";
                 statusTag.className = "text-gray-500";
             }
         }
@@ -1073,6 +1180,15 @@
                 selectForensicFile(gameState.selectedForensicFile.name, gameState.selectedForensicFile.obj);
                 updateUIHeader();
                 printToTerminal(`[EVIDÊNCIA ANEXADA]: ${gameState.selectedForensicFile.name} foi adicionado às provas da Noite!`, 'success');
+            }
+        }
+
+        function purgeCurrentFileFromForensic() {
+            if (gameState.selectedForensicFile && !gameState.selectedForensicFile.obj.isExe) {
+                const fName = gameState.selectedForensicFile.name;
+                executePurgeFile(fName);
+                document.getElementById('forensic-details').innerText = "Arquivo expurgado com sucesso.";
+                document.getElementById('purge-file-btn').classList.add('hidden');
             }
         }
 
@@ -1167,6 +1283,7 @@
         // PERMADEATH RESET GAME (Resets back to Night 1 completely)
         function permadeathResetGame() {
             document.getElementById('bsod-modal').classList.add('hidden');
+            document.getElementById('victory-modal').classList.add('hidden');
             
             gameState.currentNight = 1;
             gameState.shiftHour = 0;
