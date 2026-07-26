@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-black select-none">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOS Donetrino 2 - Perícia Forense Policial</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fontes Retrô Terminal -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'VT323', 'Share Tech Mono', monospace;
+            background-color: #030303;
+            color: #00ff66;
+            text-shadow: 0 0 5px rgba(0, 255, 102, 0.5);
+        }
+
+        /* Temas por Noite de Investigação */
+        .theme-amber {
+            color: #ffb000;
+            text-shadow: 0 0 5px rgba(255, 176, 0, 0.6);
+            --main-color: #ffb000;
+            --border-color: #aa7700;
+            --bg-accent: #221500;
+        }
+        .theme-green {
+            color: #00ff66;
+            text-shadow: 0 0 5px rgba(0, 255, 102, 0.6);
+            --main-color: #00ff66;
+            --border-color: #00aa44;
+            --bg-accent: #002208;
+        }
+        .theme-red {
+            color: #ff3344;
+            text-shadow: 0 0 7px rgba(255, 51, 68, 0.8);
+            --main-color: #ff3344;
+            --border-color: #990011;
+            --bg-accent: #220005;
+        }
+        .theme-cyan {
+            color: #00f0ff;
+            text-shadow: 0 0 5px rgba(0, 240, 255, 0.6);
+            --main-color: #00f0ff;
+            --border-color: #0088aa;
+            --bg-accent: #001a22;
+        }
+        .theme-purple {
+            color: #e044ff;
+            text-shadow: 0 0 6px rgba(224, 68, 255, 0.7);
+            --main-color: #e044ff;
+            --border-color: #8800aa;
+            --bg-accent: #200028;
+        }
+        .theme-omega {
+            color: #ffffff;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.9), 0 0 15px rgba(255, 0, 0, 0.8);
+            --main-color: #ffffff;
+            --border-color: #ff0000;
+            --bg-accent: #330000;
+        }
+
+        /* Efeito de Monitor CRT Scanline */
+        .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 40;
+            background-size: 100% 3px, 6px 100%;
+            pointer-events: none;
+        }
+
+        .crt::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: rgba(18, 16, 16, 0.1);
+            opacity: 0;
+            z-index: 40;
+            pointer-events: none;
+            animation: flicker 0.12s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.02; }
+            50% { opacity: 0.06; }
+            100% { opacity: 0.01; }
+        }
+
+        .crt-container {
+            border-radius: 8px;
+            box-shadow: inset 0 0 90px rgba(0,0,0,0.95), 0 0 25px rgba(0,0,0,0.8);
+        }
+
+        .glitch-text {
+            animation: glitch 0.25s cubic-bezier(.25, .46, .45, .94) both infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-3px, 1px); }
+            40% { transform: translate(2px, -2px); }
+            60% { transform: translate(-2px, -1px); }
+            80% { transform: translate(3px, 2px); }
+            100% { transform: translate(0); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color, #00aa44);
+        }
+
+        .dos-box {
+            border: 2px solid var(--border-color, #00aa44);
+            background-color: rgba(5, 5, 5, 0.95);
+        }
+
+        .gauge-bar {
+            transition: width 0.3s ease-in-out, background-color 0.3s ease;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col p-2 md:p-4 theme-amber crt overflow-hidden relative" id="body-root">
+
+    <!-- Police Department Top Control Header -->
+    <header class="dos-box p-2 mb-2 flex flex-wrap justify-between items-center text-xs md:text-sm border-b-2 z-20">
+        <div class="flex items-center space-x-3">
+            <span class="inline-block w-3 h-3 rounded-full bg-red-600 animate-pulse" id="status-led"></span>
+            <div>
+                <span class="font-bold tracking-widest text-yellow-400" id="police-badge">DEPT. POLÍCIA FORENSE #809</span>
+                <span class="mx-1">|</span>
+                <span class="font-bold tracking-wider" id="os-title-bar">DOS DONETRINO v1.02</span>
+            </div>
+        </div>
+        
+        <!-- Live Counters: Night, Shift Clock & Evidence -->
+        <div class="flex items-center space-x-4">
+            <div class="bg-black/80 px-2 py-0.5 border border-yellow-600">
+                NOITE: <span id="night-num" class="font-bold text-yellow-300">01 / 06</span>
+            </div>
+            <div class="bg-black/80 px-2 py-0.5 border border-cyan-600">
+                RELÓGIO: <span id="shift-time" class="font-bold text-cyan-300">00:00 AM</span>
+            </div>
+            <div class="bg-black/80 px-2 py-0.5 border border-green-600">
+                EVIDÊNCIAS: <span id="evidence-count" class="font-bold text-green-300">0 / 3</span>
+            </div>
+            <button id="sound-btn" onclick="toggleAudio()" class="px-2 py-0.5 bg-gray-900 border border-gray-600 hover:bg-gray-800 text-xs">SOM: ON</button>
+        </div>
+    </header>
+
+    <!-- System Hardware Telemetry Bar (Critical to prevent BSOD) -->
+    <div class="dos-box p-2 mb-2 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs z-20">
+        <!-- Corruption Index -->
+        <div class="flex flex-col">
+            <div class="flex justify-between font-bold mb-0.5">
+                <span>CORRUPÇÃO DO KERNEL:</span>
+                <span id="corruption-val" class="text-yellow-400">10%</span>
+            </div>
+            <div class="w-full bg-gray-950 h-3 border border-gray-800">
+                <div id="corruption-bar" class="gauge-bar h-full bg-yellow-500" style="width: 10%;"></div>
+            </div>
+        </div>
+
+        <!-- CPU Thermal Temperature -->
+        <div class="flex flex-col">
+            <div class="flex justify-between font-bold mb-0.5">
+                <span>TEMP. PROCESSADOR:</span>
+                <span id="temp-val" class="text-green-400">42°C</span>
+            </div>
+            <div class="w-full bg-gray-950 h-3 border border-gray-800">
+                <div id="temp-bar" class="gauge-bar h-full bg-green-500" style="width: 42%;"></div>
+            </div>
+        </div>
+
+        <!-- Network Intrusion/Backdoor Activity -->
+        <div class="flex flex-col">
+            <div class="flex justify-between font-bold mb-0.5">
+                <span>INTRUSÃO IRC / BACKDOOR:</span>
+                <span id="network-val" class="text-cyan-400">BAIXA</span>
+            </div>
+            <div class="w-full bg-gray-950 h-3 border border-gray-800">
+                <div id="network-bar" class="gauge-bar h-full bg-cyan-500" style="width: 15%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main CRT Terminal Viewport -->
+    <main class="flex-1 flex flex-col dos-box p-3 md:p-5 relative overflow-hidden crt-container z-10" id="main-display">
+        
+        <!-- Terminal Output Window -->
+        <div id="terminal-output" class="flex-1 overflow-y-auto space-y-1 font-mono text-base md:text-lg pr-2 leading-tight">
+            <!-- Dynamic Content Output Here -->
+        </div>
+
+        <!-- Command Input Field Line -->
+        <div class="mt-2 flex items-center pt-2 border-t border-dashed border-gray-800 text-base md:text-xl">
+            <span id="prompt-dir" class="mr-2 font-bold select-none">C:\INVESTIGACAO&gt;</span>
+            <input type="text" id="command-input" class="flex-1 bg-transparent outline-none border-none color-inherit font-mono focus:ring-0 p-0" autocomplete="off" spellcheck="false" autofocus>
+        </div>
+    </main>
+
+    <!-- APP 1: FORENSIC ANALYZER MODAL -->
+    <div id="forensic-modal" class="hidden absolute inset-4 md:inset-10 dos-box z-30 flex flex-col p-4 shadow-2xl">
+        <div class="flex justify-between items-center border-b border-green-500 pb-2 mb-3">
+            <span class="font-bold tracking-widest text-lg flex items-center gap-2">
+                <span class="bg-green-950 text-green-300 px-2 py-0.5 border border-green-600 text-xs">POLICE TOOL</span>
+                FORENSIC.EXE - Analisador Hexadecimal e Assinatura Digital
+            </span>
+            <button onclick="closeApp('forensic-modal')" class="text-red-500 hover:bg-red-950 px-2 border border-red-800 font-bold">[X] FECHAR</button>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1 overflow-hidden">
+            <!-- File Selector List -->
+            <div class="border border-gray-800 p-2 flex flex-col bg-black/60">
+                <span class="text-xs font-bold border-b border-gray-800 pb-1 mb-2">ARQUIVOS DA CAMADA ATUAL</span>
+                <div id="forensic-file-list" class="flex-1 overflow-y-auto space-y-1 text-xs">
+                    <!-- Dynamic File Items -->
+                </div>
+            </div>
+
+            <!-- Hex Inspector / Hash Viewer -->
+            <div class="md:col-span-2 border border-gray-800 p-3 flex flex-col bg-black/90 font-mono text-xs overflow-y-auto">
+                <span class="text-yellow-400 font-bold border-b border-gray-800 pb-1 mb-2" id="forensic-file-title">SELECIONE UM ARQUIVO PARA PERÍCIA</span>
+                <div id="forensic-details" class="space-y-2 whitespace-pre-wrap flex-1 text-gray-300">
+                    Aguardando seleção de arquivo para varredura de assinatura de vírus e hashes de evidência estatal...
+                </div>
+                <div class="mt-3 pt-2 border-t border-gray-800 flex justify-between items-center">
+                    <span id="forensic-status-tag" class="text-gray-500">STATUS: AGUARDANDO</span>
+                    <button id="tag-evidence-btn" onclick="tagCurrentFileAsEvidence()" class="px-3 py-1 bg-yellow-950 border border-yellow-600 text-yellow-300 hover:bg-yellow-800 font-bold hidden">MARCAR COMO EVIDÊNCIA [TAG]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP 2: MEMWATCH KERNEL HEAP REPAIR -->
+    <div id="memwatch-modal" class="hidden absolute inset-4 md:inset-12 dos-box z-30 flex flex-col p-4 shadow-2xl">
+        <div class="flex justify-between items-center border-b border-yellow-500 pb-2 mb-2">
+            <span class="font-bold text-lg text-yellow-400">MEMWATCH.EXE - Desfragmentador e Estabilizador de Heap</span>
+            <button onclick="closeApp('memwatch-modal')" class="text-red-500 hover:bg-red-950 px-2 border border-red-800 font-bold">[X] FECHAR</button>
+        </div>
+        <div class="text-xs text-gray-400 mb-2">
+            Clique nos blocos vermelhos corrompidos para desfragmentar setores instáveis antes que causem vazamento do Kernel.
+        </div>
+        <div id="ram-grid" class="flex-1 grid grid-cols-8 md:grid-cols-12 gap-1.5 p-3 bg-black border border-gray-800 overflow-y-auto">
+            <!-- Dynamic RAM Sector Blocks -->
+        </div>
+        <div class="mt-3 flex justify-between items-center border-t border-gray-800 pt-2 text-xs">
+            <span id="ram-repair-status" class="text-green-400 font-bold">SETORES ESTÁVEIS: 88%</span>
+            <button onclick="repairAllRAM()" class="px-3 py-1 bg-green-950 border border-green-600 text-green-300 hover:bg-green-800 font-bold">EXECUTAR FIXMEM AUTO [-15% CORRUPÇÃO]</button>
+        </div>
+    </div>
+
+    <!-- APP 3: IRC CHAT WIRETAP -->
+    <div id="irc-modal" class="hidden absolute inset-4 md:inset-12 dos-box z-30 flex flex-col p-3 shadow-2xl">
+        <div class="flex justify-between items-center border-b border-cyan-500 pb-1 mb-2">
+            <span class="font-bold flex items-center gap-2 text-cyan-300">
+                <span class="text-xs bg-cyan-950 border border-cyan-700 px-1 text-cyan-300">ESCUTA POLICIAL</span> 
+                <span id="irc-channel-title">#BACKDOOR_GOV [CANAL INTERCEPTADO]</span>
+            </span>
+            <button onclick="closeApp('irc-modal')" class="text-red-500 hover:bg-red-950 px-2 border border-red-800 font-bold">[X] SAIR</button>
+        </div>
+        <div class="text-xs mb-2 opacity-80 border-b border-dashed border-gray-800 pb-1 text-yellow-400">
+            Aviso Forense: Canal de transmissão clandestino sem linha telefônica discada. Monitorando suspeitos.
+        </div>
+        <div id="irc-messages" class="flex-1 overflow-y-auto space-y-2 p-2 text-sm bg-black/80 border border-gray-800 font-mono">
+            <!-- Dynamic IRC Messages -->
+        </div>
+        <div class="mt-2 flex gap-2">
+            <input type="text" id="irc-input" placeholder="Interrogar suspeitos na rede clandestina..." class="flex-1 bg-black border border-cyan-800 p-2 text-sm text-cyan-300 outline-none focus:border-cyan-400">
+            <button onclick="sendIRCMessage()" class="px-4 py-2 bg-cyan-950 border border-cyan-600 hover:bg-cyan-800 font-bold text-xs">TRANSMITIR</button>
+        </div>
+    </div>
+
+    <!-- FATAL BSOD LOCKOUT OVERLAY (PERMADEATH RESET) -->
+    <div id="bsod-modal" class="hidden fixed inset-0 bg-blue-900 text-white z-50 p-6 md:p-12 font-mono flex flex-col justify-between select-text">
+        <div class="space-y-4">
+            <div class="bg-white text-blue-900 px-3 py-1 inline-block font-bold text-lg">FATAL SYSTEM FAILURE: KERNEL PANIC & LOCKOUT</div>
+            <p id="bsod-code" class="text-xl md:text-2xl font-bold text-yellow-300">CRITICAL_SYSTEM_CORRUPTION_OVERFLOW (0x0000007F)</p>
+            <p class="text-sm md:text-base">Uma falha fatal e irrecuperável de integridade ocorreu no DOS Donetrino. O sistema detectou sabotagem forense não contida e executou o protocolo de autodestruição do Kernel.</p>
+            
+            <div class="border border-white/40 p-4 bg-blue-950/70 space-y-2 text-xs md:text-sm">
+                <p class="text-red-300 font-bold text-base" id="bsod-creep-msg">MENSAGEM DO SABOTADOR: "Você investigou demais, Detetive. Todas as suas evidências foram apagadas."</p>
+                <p>* O sistema governamental foi bloqueado para segurança do Estado.</p>
+                <p>* TODA A SUA INVESTIGAÇÃO FOI RESETADA PARA A NOITE 01.</p>
+            </div>
+        </div>
+        <div class="text-sm border-t border-white/30 pt-4 flex justify-between items-center">
+            <span>REGISTROS DESTRIÚDOS... RESETANDO SISTEMA...</span>
+            <button onclick="permadeathResetGame()" class="px-5 py-2 bg-yellow-400 text-black font-bold hover:bg-yellow-300 text-base">REINICIAR INVESTIGAÇÃO DO ZERO [RESET]</button>
+        </div>
+    </div>
+
+    <script>
+        // Web Audio API Synthesizer (Zero External Dependencies)
+        let audioEnabled = true;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('sound-btn').innerText = `SOM: ${audioEnabled ? 'ON' : 'OFF'}`;
+            if (audioEnabled) playBeep(800, 0.04);
+        }
+
+        function playBeep(freq = 520, duration = 0.04, type = 'square') {
+            if (!audioEnabled) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        function playGlitchSound() {
+            if (!audioEnabled) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(Math.random() * 900 + 150, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.25);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.25);
+            } catch(e){}
+        }
+
+        function playAlarmSound() {
+            if (!audioEnabled) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(900, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(300, audioCtx.currentTime + 0.5);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.5);
+            } catch(e){}
+        }
+
+        // --- GAME STATE ARCHITECTURE ---
+        const gameState = {
+            currentNight: 1, // 1 to 6
+            shiftHour: 0,    // 0 to 6 (00:00 to 06:00 AM)
+            shiftMinute: 0,
+            corruption: 10,  // Max 100% -> BSOD
+            cpuTemp: 40,     // Max 100°C -> BSOD
+            networkLevel: 15,// Network threat rate
+            taggedEvidence: new Set(),
+            history: [],
+            historyIdx: -1,
+            selectedForensicFile: null,
+            timerId: null
+        };
+
+        // 6 Night System Architecture (6 OS Systems given as a "Gift/Sabotage" to Govt)
+        const nightSystems = {
+            1: {
+                name: "DONETRINO OS v1.02 (MILITARY PROCUREMENT)",
+                theme: "theme-amber",
+                prompt: "C:\\PERICIA_N1>",
+                ircChannel: "#MILITARY_DONATION_1993",
+                files: {
+                    "CONTRATO_GOV.DOC": {
+                        content: "TERMO DE DOAÇÃO GOVERNAMENTAL #992-B\nSISTEMA: DOS DONETRINO v1.02\nDOADOR: CORPORAÇÃO DONETRINO LABS\nOBJETIVO: Processamento de dados sigilosos da Defesa Nacional.\nNOTA DO PERITO: O contrato não possui assinatura oficial do Ministério da Justiça.",
+                        isEvidence: true,
+                        evidenceId: "N1_EVIDENCE_CONTRACT",
+                        hash: "MD5: 9a8b7c6d5e4f3a2b"
+                    },
+                    "DON_KRNL.SYS": {
+                        content: "[DRIVE DE SISTEMA CORROMPIDO]\nDriver militar contendo instrução OCULTA de sobrescrita de memória Heap.\nAviso: Leitura contínua gera vazamento e superaquecimento do processador.",
+                        isEvidence: true,
+                        evidenceId: "N1_EVIDENCE_KERNEL",
+                        hash: "SHA256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                    },
+                    "RELATORIO_SERVIDORES.LOG": {
+                        content: "00:12 - Servidor instalado no Palácio.\n01:45 - Falha inexplicável de hardware.\n03:20 - Mensagens em código transmitidas sem linha telefônica conectada.",
+                        isEvidence: true,
+                        evidenceId: "N1_EVIDENCE_LOG",
+                        hash: "MD5: 1122334455667788"
+                    },
+                    "FORENSIC.EXE": { content: "[EXECUTÁVEL POLICIAL DE PERÍCIA HEXADECIMAL]", isExe: true },
+                    "MEMWATCH.EXE": { content: "[EXECUTÁVEL DE REPARO DE MEMÓRIA E HEAP]", isExe: true },
+                    "IRC_TAP.EXE": { content: "[EXECUTÁVEL DE ESCUTA CLANDESTINA IRC]", isExe: true }
+                },
+                ircMessages: [
+                    "Desconhecido_99: O policial novo já começou a mexer nos arquivos?",
+                    "Agente_Sombra: Deixe ele procurar. Ele não vai sobreviver até as 06:00 AM.",
+                    "DONETRINO_CORE: O presente governamental foi aceito..."
+                ]
+            },
+            2: {
+                name: "DONETRINO SECURE v2.10 (FEDERAL POLICE BACKDOOR)",
+                theme: "theme-green",
+                prompt: "C:\\BACKDOOR_N2>",
+                ircChannel: "#BACKDOOR_FEDERAL",
+                files: {
+                    "ESCUTA_WIRE.DAT": {
+                        content: "INTERCEPTAÇÃO TELEFÔNICA DA POLÍCIA FEDERAL:\nSISTEMA DONETRINO CONTÉM BACKDOOR ENVIANDO METADADOS PARA UM SERVIDOR PRIVADO NO EXTERIOR.",
+                        isEvidence: true,
+                        evidenceId: "N2_EVIDENCE_WIRE",
+                        hash: "MD5: f3a2b1c0d9e8f7a6"
+                    },
+                    "SABOTADOR_01.TXT": {
+                        content: "MEMORANDO SECRETO:\n'Enganamos os ministros. O DOS Donetrino parece um sistema operacional comum, mas é uma bomba relógio de corrupção de dados.'",
+                        isEvidence: true,
+                        evidenceId: "N2_EVIDENCE_MEMO",
+                        hash: "SHA256: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
+                    },
+                    "VIRUS_PORT666.SYS": {
+                        content: "MÓDULO DE INVASÃO DA PORTA 6667.\nEleva instantaneamente o nível de intrusão da rede.",
+                        isEvidence: true,
+                        evidenceId: "N2_EVIDENCE_VIRUS",
+                        hash: "MD5: 666766676667"
+                    },
+                    "FORENSIC.EXE": { content: "[EXECUTÁVEL POLICIAL]", isExe: true },
+                    "MEMWATCH.EXE": { content: "[REPARADOR DE RAM]", isExe: true },
+                    "IRC_TAP.EXE": { content: "[ESCUTA IRC]", isExe: true }
+                },
+                ircMessages: [
+                    "Sabotador_X: Ele encontrou o VIRUS_PORT666?",
+                    "Agente_Sombra: Se ele não der PURGE rápido, a CPU vai queimar!"
+                ]
+            },
+            3: {
+                name: "DONETRINO REASON v3.66 (SUBLIMINAL PSY-OP)",
+                theme: "theme-red",
+                prompt: "C:\\PSYOP_N3>",
+                ircChannel: "#SUB_FREQUENCIES",
+                files: {
+                    "FREQUENCIA_666.DAT": {
+                        content: "REGISTRO DE FREQUÊNCIA AUDITIVA:\nO sistema gera pulsos de som binaurais projetados para induzir pânico e paranoia nos operadores civis do governo.",
+                        isEvidence: true,
+                        evidenceId: "N3_EVIDENCE_FREQ",
+                        hash: "SHA256: 00010002000300040005"
+                    },
+                    "VITIMA_MINISTERIO.LOG": {
+                        content: "DIÁRIO DO OPERADOR B.:\n'Não consigo dormir. O computador sussurra em português arcaico quando deixo a tela ligada de madrugada.'",
+                        isEvidence: true,
+                        evidenceId: "N3_EVIDENCE_LOG",
+                        hash: "MD5: 77889900aabbccdd"
+                    },
+                    "PROJETO_NEURAL.DOC": {
+                        content: "DADOS EXPERIMENTAIS:\nInjeção direta de falhas de tela (BSOD) para induzir estresse extremo em investigadores.",
+                        isEvidence: true,
+                        evidenceId: "N3_EVIDENCE_DOC",
+                        hash: "MD5: 990011223344"
+                    },
+                    "FORENSIC.EXE": { content: "[EXECUTÁVEL POLICIAL]", isExe: true },
+                    "MEMWATCH.EXE": { content: "[REPARADOR DE RAM]", isExe: true },
+                    "IRC_TAP.EXE": { content: "[ESCUTA IRC]", isExe: true }
+                },
+                ircMessages: [
+                    "Voz_Sem_Corpo: Você está ouvindo o chiado do cooler, policial?",
+                    "Voz_Sem_Corpo: Não dê tela azul ou você perde tudo..."
+                ]
+            },
+            4: {
+                name: "DONETRINO SHADOW FAT32 v4.0 (GHOST CLUSTER)",
+                theme: "theme-cyan",
+                prompt: "C:\\SETORES_N4>",
+                ircChannel: "#GHOST_FAT32",
+                files: {
+                    "PLANO_SABOTAGEM.RAW": {
+                        content: "ARQUIVO RECUPERADO DE SETOR DELETADO:\n'O presente doado ao governo tinha como objetivo paralisar o sistema financeiro e culpar um ataque hacker estrangeiro.'",
+                        isEvidence: true,
+                        evidenceId: "N4_EVIDENCE_PLAN",
+                        hash: "SHA256: deadbeef1234567890"
+                    },
+                    "LISTA_ENVOLVIDOS.DAT": {
+                        content: "NOMES CÚMPLICES NO GOVERNO:\n- Ministro A. Silva\n- Diretor R. Fonseca\n- Engenheiro D. Donetrino",
+                        isEvidence: true,
+                        evidenceId: "N4_EVIDENCE_NAMES",
+                        hash: "MD5: 44332211"
+                    },
+                    "REGISTRO_EXPURGO.SYS": {
+                        content: "Instrução para formatar os discos antes da polícia chegar.",
+                        isEvidence: true,
+                        evidenceId: "N4_EVIDENCE_EXPURGO",
+                        hash: "MD5: 00112233"
+                    },
+                    "FORENSIC.EXE": { content: "[EXECUTÁVEL POLICIAL]", isExe: true },
+                    "MEMWATCH.EXE": { content: "[REPARADOR DE RAM]", isExe: true },
+                    "IRC_TAP.EXE": { content: "[ESCUTA IRC]", isExe: true }
+                },
+                ircMessages: [
+                    "Ghost_User: Você escavou a lista de envolvidos?",
+                    "Sabotador_X: Queime o setor antes que ele marque as evidências!"
+                ]
+            },
+            5: {
+                name: "DONETRINO BLACK-NET v5.99 (COVERT INTERCEPT)",
+                theme: "theme-purple",
+                prompt: "C:\\BLACKNET_N5>",
+                ircChannel: "#REDES_OCULTAS_5",
+                files: {
+                    "ORDEM_EXECUCAO.LOG": {
+                        content: "MENSAGEM CRIPTOGRAFADA:\n'Se a perícia policial chegar à Noite 6, ative a corrupção total e force o BSOD de lockout definitivo.'",
+                        isEvidence: true,
+                        evidenceId: "N5_EVIDENCE_ORDER",
+                        hash: "SHA256: 99988877766655544332211"
+                    },
+                    "TROJAN_POLICE.SYS": {
+                        content: "Cavalo de Tróia direcionado ao terminal forense. Eleva a temperatura do processador para 90°C.",
+                        isEvidence: true,
+                        evidenceId: "N5_EVIDENCE_TROJAN",
+                        hash: "MD5: 9900990099"
+                    },
+                    "CONFISSAO_DONETRINO.TXT": {
+                        content: "MENSAGEM FINAL DO CRIADOR:\n'O DOS Donetrino não é um software. É uma entidade autônoma desenvolvida em laboratório.'",
+                        isEvidence: true,
+                        evidenceId: "N5_EVIDENCE_CONFESSION",
+                        hash: "SHA256: 1111222233334444"
+                    },
+                    "FORENSIC.EXE": { content: "[EXECUTÁVEL POLICIAL]", isExe: true },
+                    "MEMWATCH.EXE": { content: "[REPARADOR DE RAM]", isExe: true },
+                    "IRC_TAP.EXE": { content: "[ESCUTA IRC]", isExe: true }
+                },
+                ircMessages: [
+                    "Sombra_Net: Falta só mais uma noite... mas você vai falhar no Omega Kernel!"
+                ]
+            },
+            6: {
+                name: "DONETRINO OMEGA KERNEL v6.66 (THE CORE)",
+                theme: "theme-omega",
+                prompt: "CORE:\\NUCLEO_N6>",
+                ircChannel: "#NUCLEO_SUPREMO",
+                files: {
+                    "PROVA_FINAL_SABOTAGEM.DAT": {
+                        content: "EVIDÊNCIA MESTRA #001:\nDocumento definitivo comprovando a sabotagem estatal da doação do DOS Donetrino ao Governo Federal.",
+                        isEvidence: true,
+                        evidenceId: "N6_EVIDENCE_MASTER",
+                        hash: "SHA256: OMEGA_PROOF_ACCEPTED_1993"
+                    },
+                    "IA_DONETRINO_CORE.SYS": {
+                        content: "O núcleo vivo da inteligência de sabotagem. Exige comando PURGE ALL /SECURE para neutralização total.",
+                        isEvidence: true,
+                        evidenceId: "N6_EVIDENCE_CORE",
+                        hash: "SHA256: CORE_DESTRUCTION_HASH_666"
+                    },
+                    "VEREDITO_POLICIAL.DOC": {
+                        content: "RELATÓRIO FINAL DA INVESTIGAÇÃO:\nPronto para ser assinado e enviado ao Ministério da Justiça às 06:00 AM.",
+                        isEvidence: true,
+                        evidenceId: "N6_EVIDENCE_VERDICT",
+                        hash: "MD5: FINAL_VERDICT_OK"
+                    },
+                    "FORENSIC.EXE": { content: "[EXECUTÁVEL POLICIAL]", isExe: true },
+                    "MEMWATCH.EXE": { content: "[REPARADOR DE RAM]", isExe: true },
+                    "IRC_TAP.EXE": { content: "[ESCUTA IRC]", isExe: true }
+                },
+                ircMessages: [
+                    "DONETRINO_DEUS: EU SOU O HARDWARE. EU SOU O GOVERNO. EU SOU VOCÊ.",
+                    "DONETRINO_DEUS: Dê PURGE nas evidências ou sofra o BSOD eterno!"
+                ]
+            }
+        };
+
+        const terminalOutput = document.getElementById('terminal-output');
+        const commandInput = document.getElementById('command-input');
+
+        function printToTerminal(text, type = 'normal') {
+            const line = document.createElement('div');
+            line.className = 'whitespace-pre-wrap break-words leading-tight';
+
+            if (type === 'error') line.className += ' text-red-500 font-bold';
+            else if (type === 'success') line.className += ' text-green-300 font-bold';
+            else if (type === 'warning') line.className += ' text-yellow-400';
+            else if (type === 'system') line.className += ' text-cyan-400 font-bold';
+            else if (type === 'glitch') line.className += ' text-purple-400 glitch-text';
+
+            line.textContent = text;
+            terminalOutput.appendChild(line);
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+            playBeep(600, 0.02);
+        }
+
+        function updateUIHeader() {
+            const sys = nightSystems[gameState.currentNight];
+            document.getElementById('os-title-bar').innerText = sys.name;
+            document.getElementById('night-num').innerText = `0${gameState.currentNight} / 06`;
+            
+            const hrStr = gameState.shiftHour < 10 ? `0${gameState.shiftHour}` : `${gameState.shiftHour}`;
+            const minStr = gameState.shiftMinute < 10 ? `0${gameState.shiftMinute}` : `${gameState.shiftMinute}`;
+            document.getElementById('shift-time').innerText = `${hrStr}:${minStr} AM`;
+            
+            // Count evidence tagged for THIS night
+            let nightTaggedCount = 0;
+            for (let fName in sys.files) {
+                const f = sys.files[fName];
+                if (f.isEvidence && gameState.taggedEvidence.has(f.evidenceId)) {
+                    nightTaggedCount++;
+                }
+            }
+            document.getElementById('evidence-count').innerText = `${nightTaggedCount} / 3`;
+            document.getElementById('prompt-dir').innerText = sys.prompt;
+
+            // Telemetry Bars
+            document.getElementById('corruption-val').innerText = `${Math.floor(gameState.corruption)}%`;
+            document.getElementById('corruption-bar').style.width = `${Math.min(100, gameState.corruption)}%`;
+
+            document.getElementById('temp-val').innerText = `${Math.floor(gameState.cpuTemp)}°C`;
+            document.getElementById('temp-bar').style.width = `${Math.min(100, gameState.cpuTemp)}%`;
+
+            const netStr = gameState.networkLevel > 60 ? 'CRÍTICA (ALTA)' : gameState.networkLevel > 30 ? 'MODERADA' : 'BAIXA';
+            document.getElementById('network-val').innerText = netStr;
+            document.getElementById('network-bar').style.width = `${Math.min(100, gameState.networkLevel)}%`;
+
+            // Theme body class
+            const body = document.getElementById('body-root');
+            body.className = `h-full flex flex-col p-2 md:p-4 crt overflow-hidden relative ${sys.theme}`;
+        }
+
+        function startHardwareTickLoop() {
+            if (gameState.timerId) clearInterval(gameState.timerId);
+
+            gameState.timerId = setInterval(() => {
+                // Advance clock
+                gameState.shiftMinute += 5;
+                if (gameState.shiftMinute >= 60) {
+                    gameState.shiftMinute = 0;
+                    gameState.shiftHour += 1;
+                }
+
+                // Passive degradation over time
+                gameState.corruption += 1.2 + (gameState.currentNight * 0.4);
+                gameState.cpuTemp += 0.8 + (gameState.currentNight * 0.3);
+                gameState.networkLevel = Math.min(100, gameState.networkLevel + 1);
+
+                // Random IRC popups
+                if (Math.random() < 0.25) {
+                    triggerRandomIRCMessage();
+                }
+
+                // Check for Shift Over (06:00 AM)
+                if (gameState.shiftHour >= 6) {
+                    checkNightCompletion();
+                }
+
+                // Check Fatal BSOD Conditions
+                if (gameState.corruption >= 100) {
+                    triggerBSOD("KERNEL_MEMORY_CORRUPTION_OVERFLOW_100");
+                } else if (gameState.cpuTemp >= 100) {
+                    triggerBSOD("HARDWARE_CPU_THERMAL_MELTDOWN_100C");
+                }
+
+                updateUIHeader();
+            }, 3000); // Ticks every 3 seconds
+        }
+
+        function triggerRandomIRCMessage() {
+            const sys = nightSystems[gameState.currentNight];
+            if (!sys || !sys.ircMessages) return;
+
+            const msg = sys.ircMessages[Math.floor(Math.random() * sys.ircMessages.length)];
+            const chatBox = document.getElementById('irc-messages');
+            
+            const line = document.createElement('div');
+            line.className = 'text-yellow-400 font-bold';
+            line.innerText = `[MENSAGEM INTERCEPTADA]: ${msg}`;
+            chatBox.appendChild(line);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            printToTerminal(`[ALERTA FORENSE]: Nova mensagem clandestina recebida no canal ${sys.ircChannel}!`, "warning");
+            playAlarmSound();
+        }
+
+        function processCommand(cmdRaw) {
+            const cmdTrimmed = cmdRaw.trim();
+            if (!cmdTrimmed) return;
+
+            gameState.history.push(cmdRaw);
+            gameState.historyIdx = gameState.history.length;
+
+            const prompt = nightSystems[gameState.currentNight].prompt;
+            printToTerminal(`${prompt} ${cmdRaw}`, 'system');
+
+            const parts = cmdTrimmed.split(' ');
+            const mainCmd = parts[0].toUpperCase();
+            const arg = parts.slice(1).join(' ').toUpperCase();
+
+            playBeep(450, 0.03);
+
+            switch (mainCmd) {
+                case 'HELP':
+                case 'MANUAL':
+                case 'COMOJOGAR':
+                    printToTerminal("=================== MANUAL FORENSE & COMO JOGAR ===================", "warning");
+                    printToTerminal("OBJETIVO DO DETETIVE:");
+                    printToTerminal(" Sobreviver das 00:00 AM às 06:00 AM em 6 Noites investigando as builds");
+                    printToTerminal(" secretas do DOS Donetrino. Você deve identificar e marcar as 3 Evidências");
+                    printToTerminal(" Criminais da noite com 'TAG <arquivo>' antes das 06:00 AM sem permitir que");
+                    printToTerminal(" a Corrupção atinja 100% ou a CPU atinja 100°C (ambos causam BSOD e RESET!).");
+                    printToTerminal("");
+                    printToTerminal("ESTRATÉGIA FORENSE & QUANDO/ONDE USAR O 'PURGE':");
+                    printToTerminal(" - O jogo NÃO dá dicas automáticas. Cabe à sua inteligência analisar cada arquivo.");
+                    printToTerminal(" - Arquivos hostis (.SYS, trojans, backdoors) corrompem a memória do Kernel");
+                    printToTerminal("   e superaquecem o processador continuamente enquanto existirem no sistema.");
+                    printToTerminal(" - ONDE DAR PURGE: Investigue os arquivos com 'ANALYZE <arquivo>', 'TYPE <arquivo>'");
+                    printToTerminal("   ou na ferramenta 'FORENSIC.EXE'. Ao constatar padrão de código infectado,");
+                    printToTerminal("   digite 'PURGE <NOME_DO_ARQUIVO>' para deletar e sanitizar o malware.");
+                    printToTerminal(" - EFEITO DO PURGE: Reduz drasticamente a Corrupção e a Temperatura da CPU.");
+                    printToTerminal("   CUIDADO: Se der PURGE em uma Evidência Criminal, a prova será destruída!");
+                    printToTerminal("");
+                    printToTerminal("LISTA COMPLETA DE COMANDOS:");
+                    printToTerminal(" DIR             - Lista os arquivos da noite/camada atual do DOS.");
+                    printToTerminal(" TYPE <arquivo>  - Exibe o texto/conteúdo bruto de um arquivo no terminal.");
+                    printToTerminal(" ANALYZE <arq>   - Exibe metadados, integridade de Heap e hash do arquivo.");
+                    printToTerminal(" TAG <arquivo>   - Marca e anexa uma prova criminal ao Inquérito Policial.");
+                    printToTerminal(" PURGE <arquivo> - Expurga e deleta um arquivo infectado (Limpa Corrupção/Calor).");
+                    printToTerminal(" COOL            - Executa resfriamento de emergência na CPU (-20°C).");
+                    printToTerminal(" FIXMEM          - Desfragmenta setores da memória Heap (-15% Corrupção).");
+                    printToTerminal(" ISOLATE         - Isola a porta de transmissão e diminui invasões IRC.");
+                    printToTerminal(" RUN <app>       - Executa aplicativos: FORENSIC.EXE, MEMWATCH.EXE, IRC_TAP.EXE.");
+                    printToTerminal(" EVIDENCE        - Exibe o status das evidências encontradas na noite.");
+                    printToTerminal(" STATUS          - Exibe diagnósticos em tempo real de hardware e rede.");
+                    printToTerminal(" CLS             - Limpa o histórico de linhas da tela.");
+                    printToTerminal("==================================================================", "warning");
+                    break;
+
+                case 'DIR':
+                    const files = nightSystems[gameState.currentNight].files;
+                    printToTerminal(` O Volume na unidade C é POLICE_FORENSIC_DONETRINO`);
+                    printToTerminal(` Diretório de ${nightSystems[gameState.currentNight].prompt}\n`);
+                    let count = 0;
+                    for (let f in files) {
+                        count++;
+                        const isExe = files[f].isExe;
+                        const isEv = files[f].isEvidence ? ' [EVIDÊNCIA POLICIAL]' : '';
+                        printToTerminal(`${f.padEnd(22, ' ')} ${isExe ? '<EXEC>' : '<ARQ>'}   ${Math.floor(Math.random()*5000 + 500)} bytes${isEv}`);
+                    }
+                    printToTerminal(`\n       ${count} arquivo(s) encontrado(s).`);
+                    break;
+
+                case 'TYPE':
+                case 'CAT':
+                    if (!arg) {
+                        printToTerminal("Sintaxe incorreta. Use: TYPE <NOME_DO_ARQUIVO>", "error");
+                    } else {
+                        const sysFiles = nightSystems[gameState.currentNight].files;
+                        let found = false;
+                        for (let fName in sysFiles) {
+                            if (fName.toUpperCase() === arg) {
+                                printToTerminal(`--- LENDO ARQUIVO: ${fName} ---`, 'warning');
+                                printToTerminal(sysFiles[fName].content);
+                                found = true;
+
+                                // Inspecting raw virus files increases temp
+                                if (fName.includes('SYS') || fName.includes('VIRUS')) {
+                                    gameState.cpuTemp += 5;
+                                    printToTerminal("[ALERTA]: O arquivo executou código de estresse no Kernel!", "error");
+                                    playGlitchSound();
+                                }
+                                break;
+                            }
+                        }
+                        if (!found) printToTerminal(`Arquivo não encontrado: ${arg}`, "error");
+                    }
+                    break;
+
+                case 'RUN':
+                case 'EXEC':
+                    if (!arg) {
+                        printToTerminal("Uso: RUN <FORENSIC.EXE | MEMWATCH.EXE | IRC_TAP.EXE>", "error");
+                    } else if (arg === 'FORENSIC.EXE' || arg === 'FORENSIC') {
+                        openApp('forensic-modal');
+                    } else if (arg === 'MEMWATCH.EXE' || arg === 'MEMWATCH') {
+                        openApp('memwatch-modal');
+                    } else if (arg === 'IRC_TAP.EXE' || arg === 'IRC_TAP' || arg === 'CHAT') {
+                        openApp('irc-modal');
+                    } else {
+                        printToTerminal(`Erro de execução em '${arg}'. Arquivo não é um executável válido.`, "error");
+                    }
+                    break;
+
+                case 'ANALYZE':
+                    if (!arg) {
+                        printToTerminal("Uso incorreto. Sintaxe: ANALYZE <NOME_DO_ARQUIVO>", "error");
+                    } else {
+                        const sysFiles = nightSystems[gameState.currentNight].files;
+                        let fObj = null;
+                        let actualName = null;
+                        for (let fn in sysFiles) {
+                            if (fn.toUpperCase() === arg) { fObj = sysFiles[fn]; actualName = fn; break; }
+                        }
+                        if (fObj) {
+                            printToTerminal(`================ RELATÓRIO DE ANÁLISE FORENSE ================`, 'system');
+                            printToTerminal(`Identificador: ${actualName}`);
+                            printToTerminal(`Assinatura de Hash: ${fObj.hash || 'ASSINATURA NULA OU CRIPTOGRAFADA'}`);
+                            printToTerminal(`Tamanho no Bloco: ${Math.floor(Math.random()*4000 + 1200)} bytes`);
+                            printToTerminal(`Comportamento do Kernel: ${fObj.isEvidence ? 'CONTÉM ASSINATURA ESTATAL / REGISTRO LEGAL' : fObj.isExe ? 'EXECUTÁVEL DE SISTEMA' : 'PADRÃO DE EXECUÇÃO HOSTIL / DRIVER SUSPEITO'}`);
+                            printToTerminal(`Nível de Entropia: ${(Math.random() * 3 + 5).toFixed(2)} [AVALIAÇÃO ESTRATÉGICA EXIGIDA DO PERITO]`);
+                            printToTerminal(`================================================================`, 'system');
+                        } else {
+                            printToTerminal(`Arquivo não encontrado para análise: ${arg}`, "error");
+                        }
+                    }
+                    break;
+
+                case 'TAG':
+                    if (!arg) {
+                        printToTerminal("Uso: TAG <NOME_DO_ARQUIVO>", "error");
+                    } else {
+                        const sysFiles = nightSystems[gameState.currentNight].files;
+                        let fObj = null;
+                        for (let fn in sysFiles) {
+                            if (fn.toUpperCase() === arg) { fObj = sysFiles[fn]; break; }
+                        }
+                        if (fObj && fObj.isEvidence) {
+                            gameState.taggedEvidence.add(fObj.evidenceId);
+                            printToTerminal(`[EVIDÊNCIA REGISTRADA]: Arquivo '${arg}' anexado com sucesso ao Inquérito Policial!`, 'success');
+                            playBeep(900, 0.1);
+                            updateUIHeader();
+                        } else {
+                            printToTerminal(`O arquivo '${arg}' não possui valor de prova criminal!`, 'error');
+                        }
+                    }
+                    break;
+
+                case 'COOL':
+                    if (gameState.cpuTemp > 35) {
+                        gameState.cpuTemp = Math.max(30, gameState.cpuTemp - 20);
+                        printToTerminal("SISTEMA DE RESFRIAMENTO ATIVADO: Temperatura do processador reduzida!", "success");
+                        playBeep(300, 0.1);
+                    } else {
+                        printToTerminal("O processador já está em temperatura segura.", "system");
+                    }
+                    updateUIHeader();
+                    break;
+
+                case 'FIXMEM':
+                    if (gameState.corruption > 5) {
+                        gameState.corruption = Math.max(0, gameState.corruption - 15);
+                        printToTerminal("LIMPEZA DE HEAP CONCLUÍDA: Setores corrompidos desfragmentados!", "success");
+                        playBeep(800, 0.1);
+                    } else {
+                        printToTerminal("A memória Heap está estabilizada.", "system");
+                    }
+                    updateUIHeader();
+                    break;
+
+                case 'ISOLATE':
+                    gameState.networkLevel = 5;
+                    printToTerminal("CORTANDO CONEXÕES CLANDESTINAS: Porta IRC isolada e firewall reativado!", "success");
+                    updateUIHeader();
+                    break;
+
+                case 'PURGE':
+                    if (!arg) {
+                        printToTerminal("Uso incorreto. Sintaxe: PURGE <NOME_DO_ARQUIVO_INFECTADO>", "error");
+                    } else {
+                        const sysFiles = nightSystems[gameState.currentNight].files;
+                        let foundKey = null;
+                        for (let fn in sysFiles) {
+                            if (fn.toUpperCase() === arg) { foundKey = fn; break; }
+                        }
+                        if (foundKey) {
+                            printToTerminal(`EXPURGANDO MÓDULO E DESALOCANDO BLOCOS DE '${foundKey}'...`, 'warning');
+                            playGlitchSound();
+                            
+                            if (sysFiles[foundKey].isEvidence) {
+                                printToTerminal(`[ALERTA FORENSE]: O arquivo expurgado possuía valor penal! A prova foi eliminada do disco.`, 'error');
+                            } else {
+                                printToTerminal(`[PURGE CONCLUÍDO]: Módulo desmantelado com sucesso!`, 'success');
+                            }
+
+                            // Substantial heat & corruption relief
+                            gameState.corruption = Math.max(0, gameState.corruption - 20);
+                            gameState.cpuTemp = Math.max(30, gameState.cpuTemp - 15);
+                            
+                            delete sysFiles[foundKey];
+                            updateUIHeader();
+                        } else {
+                            printToTerminal(`Arquivo '${arg}' não encontrado no diretório atual para expurgo.`, "error");
+                        }
+                    }
+                    break;
+
+                case 'EVIDENCE':
+                    printToTerminal(`=== RELATÓRIO DE EVIDÊNCIAS DA NOITE ${gameState.currentNight} ===`, 'warning');
+                    const sysFiles = nightSystems[gameState.currentNight].files;
+                    let foundAny = false;
+                    for (let fn in sysFiles) {
+                        const f = sysFiles[fn];
+                        if (f.isEvidence) {
+                            const isTagged = gameState.taggedEvidence.has(f.evidenceId);
+                            printToTerminal(`- ${fn.padEnd(20, ' ')} : ${isTagged ? '[ANEXADO AO INQUÉRITO]' : '[PENDENTE DE REGISTRO]'}`);
+                            foundAny = true;
+                        }
+                    }
+                    break;
+
+                case 'STATUS':
+                    printToTerminal(`=== STATUS DE HARDWARE & PERÍCIA ===`, 'warning');
+                    printToTerminal(`Noite Atual: ${gameState.currentNight} de 06`);
+                    printToTerminal(`Horário do Plantão: ${document.getElementById('shift-time').innerText}`);
+                    printToTerminal(`Índice de Corrupção do Kernel: ${Math.floor(gameState.corruption)}% / 100%`);
+                    printToTerminal(`Temperatura da CPU: ${Math.floor(gameState.cpuTemp)}°C / 100°C`);
+                    printToTerminal(`Nível de Ameaça IRC: ${Math.floor(gameState.networkLevel)}%`);
+                    break;
+
+                case 'CLS':
+                    terminalOutput.innerHTML = '';
+                    break;
+
+                default:
+                    printToTerminal(`Comando não reconhecido: '${cmdRaw}'. Digite HELP.`, "error");
+                    break;
+            }
+        }
+
+        function checkNightCompletion() {
+            const sys = nightSystems[gameState.currentNight];
+            let nightTaggedCount = 0;
+            let totalNightEvidence = 0;
+
+            for (let fName in sys.files) {
+                const f = sys.files[fName];
+                if (f.isEvidence) {
+                    totalNightEvidence++;
+                    if (gameState.taggedEvidence.has(f.evidenceId)) {
+                        nightTaggedCount++;
+                    }
+                }
+            }
+
+            if (nightTaggedCount >= 3) {
+                // Success Advance Night
+                clearInterval(gameState.timerId);
+                playBeep(900, 0.3);
+
+                if (gameState.currentNight < 6) {
+                    printToTerminal(`\n==================================================================`, 'success');
+                    printToTerminal(`06:00 AM - FIM DO PLANTÃO DA NOITE 0${gameState.currentNight}!`, 'success');
+                    printToTerminal(`TODAS AS 3 EVIDÊNCIAS REGISTRADAS COM SUCESSO!`, 'success');
+                    printToTerminal(`CARREGANDO NOVO SISTEMA DONETRINO DA PRÓXIMA MADRUGADA...`, 'system');
+                    printToTerminal(`==================================================================\n`, 'success');
+
+                    setTimeout(() => {
+                        gameState.currentNight++;
+                        gameState.shiftHour = 0;
+                        gameState.shiftMinute = 0;
+                        gameState.corruption = 10 + (gameState.currentNight * 5);
+                        gameState.cpuTemp = 40;
+                        gameState.networkLevel = 15;
+                        
+                        terminalOutput.innerHTML = '';
+                        updateUIHeader();
+                        startHardwareTickLoop();
+
+                        printToTerminal(`INICIANDO MADRUGADA DA NOITE 0${gameState.currentNight}...`, 'system');
+                        printToTerminal(`SISTEMA OPERACIONAL: ${nightSystems[gameState.currentNight].name}`);
+                        printToTerminal(`Investigue os novos arquivos e evite o BSOD a todo custo!\n`);
+                    }, 4000);
+                } else {
+                    // BEAT THE ENTIRE GAME!
+                    printToTerminal(`\n==================================================================`, 'success');
+                    printToTerminal(`PARABÉNS, DETETIVE! VOCÊ SOBREVIVEU ÀS 6 NOITES DO DOS DONETRINO!`, 'success');
+                    printToTerminal(`O INQUÉRITO POLICIAL FOI ENVIADO AO MINISTÉRIO DA JUSTIÇA.`, 'success');
+                    printToTerminal(`A SABOTAGEM E A ENTIDADE DIGITAL FORAM EXPURGADAS COM SUCESSO!`, 'success');
+                    printToTerminal(`==================================================================\n`, 'success');
+                }
+            } else {
+                // Time reached 06:00 AM but failed to collect 3 evidence items!
+                printToTerminal(`[FALHA NO INQUÉRITO]: Chegou às 06:00 AM sem registrar as 3 Evidências Policiais!`, 'error');
+                printToTerminal(`O Kernel detectou investigação incompleta e forçou o pânico do sistema...`, 'error');
+                setTimeout(() => {
+                    triggerBSOD("INCOMPLETE_EVIDENCE_INVESTIGATION_LOCKOUT");
+                }, 2000);
+            }
+        }
+
+        function openApp(id) {
+            document.getElementById(id).classList.remove('hidden');
+            playBeep(700, 0.05);
+
+            if (id === 'forensic-modal') {
+                renderForensicFileList();
+            } else if (id === 'memwatch-modal') {
+                renderRAMGrid();
+            } else if (id === 'irc-modal') {
+                document.getElementById('irc-channel-title').innerText = nightSystems[gameState.currentNight].ircChannel;
+            }
+        }
+
+        function closeApp(id) {
+            document.getElementById(id).classList.add('hidden');
+            playBeep(300, 0.05);
+        }
+
+        // APP 1: Forensic Analyzer File List
+        function renderForensicFileList() {
+            const listContainer = document.getElementById('forensic-file-list');
+            listContainer.innerHTML = '';
+
+            const files = nightSystems[gameState.currentNight].files;
+            for (let fName in files) {
+                const item = document.createElement('div');
+                item.className = 'p-1.5 border border-gray-800 hover:bg-green-950 cursor-pointer transition-all flex justify-between items-center';
+                item.innerHTML = `<span>${fName}</span> <span class="text-gray-500">${files[fName].isExe ? '[EXE]' : '[DAT]'}</span>`;
+                item.onclick = () => selectForensicFile(fName, files[fName]);
+                listContainer.appendChild(item);
+            }
+        }
+
+        function selectForensicFile(fileName, fileObj) {
+            gameState.selectedForensicFile = { name: fileName, obj: fileObj };
+            document.getElementById('forensic-file-title').innerText = `PERÍCIA: ${fileName}`;
+            
+            let html = `CONTEÚDO DO ARQUIVO:\n${fileObj.content}\n\n`;
+            html += `HASH DE ASSINATURA: ${fileObj.hash || 'DESCONHECIDO'}\n`;
+            html += `RELEVÂNCIA PENAL: ${fileObj.isEvidence ? 'ALTA (EVIDÊNCIA CRIMINAL)' : 'NENHUMA'}`;
+
+            document.getElementById('forensic-details').innerText = html;
+
+            const tagBtn = document.getElementById('tag-evidence-btn');
+            const statusTag = document.getElementById('forensic-status-tag');
+
+            if (fileObj.isEvidence) {
+                tagBtn.classList.remove('hidden');
+                if (gameState.taggedEvidence.has(fileObj.evidenceId)) {
+                    statusTag.innerText = "STATUS: JÁ ANEXADO AO INQUÉRITO";
+                    statusTag.className = "text-green-400 font-bold";
+                } else {
+                    statusTag.innerText = "STATUS: PRONTO PARA REGISTRO";
+                    statusTag.className = "text-yellow-400 font-bold";
+                }
+            } else {
+                tagBtn.classList.add('hidden');
+                statusTag.innerText = "STATUS: ARQUIVO COMUM";
+                statusTag.className = "text-gray-500";
+            }
+        }
+
+        function tagCurrentFileAsEvidence() {
+            if (gameState.selectedForensicFile && gameState.selectedForensicFile.obj.isEvidence) {
+                gameState.taggedEvidence.add(gameState.selectedForensicFile.obj.evidenceId);
+                playBeep(900, 0.1);
+                selectForensicFile(gameState.selectedForensicFile.name, gameState.selectedForensicFile.obj);
+                updateUIHeader();
+                printToTerminal(`[EVIDÊNCIA ANEXADA]: ${gameState.selectedForensicFile.name} foi adicionado às provas da Noite!`, 'success');
+            }
+        }
+
+        // APP 2: Memwatch Heap Grid
+        function renderRAMGrid() {
+            const grid = document.getElementById('ram-grid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < 48; i++) {
+                const block = document.createElement('div');
+                const isCorrupt = Math.random() < (gameState.corruption / 100);
+
+                block.className = `h-8 rounded border flex items-center justify-center font-mono text-xs cursor-pointer transition-all ${
+                    isCorrupt ? 'bg-red-950 border-red-600 text-red-300 animate-pulse' : 'bg-green-950 border-green-800 text-green-400'
+                }`;
+                block.innerText = isCorrupt ? 'ERR' : 'OK';
+                
+                block.onclick = () => {
+                    if (isCorrupt) {
+                        block.className = 'h-8 rounded border border-green-800 bg-green-950 text-green-400 flex items-center justify-center font-mono text-xs';
+                        block.innerText = 'OK';
+                        gameState.corruption = Math.max(0, gameState.corruption - 2);
+                        playBeep(800, 0.02);
+                        updateUIHeader();
+                    }
+                };
+                grid.appendChild(block);
+            }
+        }
+
+        function repairAllRAM() {
+            gameState.corruption = Math.max(0, gameState.corruption - 15);
+            playBeep(900, 0.08);
+            renderRAMGrid();
+            updateUIHeader();
+            document.getElementById('ram-repair-status').innerText = 'SETORES REPARADOS E HEAP ESTABILIZADO!';
+        }
+
+        // APP 3: IRC Chat Wiretap Send Message
+        function sendIRCMessage() {
+            const input = document.getElementById('irc-input');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            const chatBox = document.getElementById('irc-messages');
+            const userLine = document.createElement('div');
+            userLine.className = 'text-green-300 font-bold';
+            userLine.innerText = `<POLÍCIA_PERITO>: ${msg}`;
+            chatBox.appendChild(userLine);
+
+            input.value = '';
+            playBeep(700, 0.02);
+
+            setTimeout(() => {
+                const respLine = document.createElement('div');
+                respLine.className = 'text-red-400 font-bold glitch-text';
+                
+                const answers = [
+                    "Sombra_Net: Você não tem autorização para interrogar esta rede!",
+                    "DONETRINO_CORE: Todas as suas mensagens estão sendo gravadas...",
+                    "Sabotador_X: Cuidado com a temperatura da sua CPU, detetive...",
+                    "Agente_Zero: Apague o arquivo de log antes das 06:00 AM!"
+                ];
+                respLine.innerText = answers[Math.floor(Math.random() * answers.length)];
+                chatBox.appendChild(respLine);
+                chatBox.scrollTop = chatBox.scrollHeight;
+                playGlitchSound();
+                
+                gameState.corruption += 3;
+                updateUIHeader();
+            }, 1000);
+        }
+
+        function triggerBSOD(errorCode) {
+            playAlarmSound();
+            clearInterval(gameState.timerId);
+
+            const bsod = document.getElementById('bsod-modal');
+            bsod.classList.remove('hidden');
+
+            document.getElementById('bsod-code').innerText = `CRITICAL_PANIC: ${errorCode}`;
+            
+            const creepMsgs = [
+                '"O DOS Donetrino detectou sua perícia e destruiu todos os registros da polícia."',
+                '"Você permitiu que a temperatura do processador ou a corrupção atingissem o limite."',
+                '"O presente governamental destruiu seu terminal forense."',
+                '"Todas as evidências foram apagadas. Reiniciando a investigação na Noite 1."'
+            ];
+            document.getElementById('bsod-creep-msg').innerText = creepMsgs[Math.floor(Math.random() * creepMsgs.length)];
+        }
+
+        // PERMADEATH RESET GAME (Resets back to Night 1 completely)
+        function permadeathResetGame() {
+            document.getElementById('bsod-modal').classList.add('hidden');
+            
+            gameState.currentNight = 1;
+            gameState.shiftHour = 0;
+            gameState.shiftMinute = 0;
+            gameState.corruption = 10;
+            gameState.cpuTemp = 40;
+            gameState.networkLevel = 15;
+            gameState.taggedEvidence.clear();
+
+            terminalOutput.innerHTML = '';
+            updateUIHeader();
+            startHardwareTickLoop();
+
+            printToTerminal("==================================================================", "system");
+            printToTerminal("SISTEMA RESETADO APÓS BLOQUEIO FATAL DO KERNEL (BSOD)", "error");
+            printToTerminal("REINICIANDO INVESTIGAÇÃO POLICIAL DESDE A NOITE 01...", "warning");
+            printToTerminal("==================================================================\n");
+            printToTerminal("SISTEMA OPERACIONAL: " + nightSystems[1].name);
+            printToTerminal("Digite 'HELP' para ver os comandos de prevenção de BSOD e perícia.\n");
+        }
+
+        commandInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const val = commandInput.value;
+                commandInput.value = '';
+                processCommand(val);
+            } else if (e.key === 'ArrowUp') {
+                if (gameState.historyIdx > 0) {
+                    gameState.historyIdx--;
+                    commandInput.value = gameState.history[gameState.historyIdx] || '';
+                }
+            } else if (e.key === 'ArrowDown') {
+                if (gameState.historyIdx < gameState.history.length - 1) {
+                    gameState.historyIdx++;
+                    commandInput.value = gameState.history[gameState.historyIdx] || '';
+                } else {
+                    gameState.historyIdx = gameState.history.length;
+                    commandInput.value = '';
+                }
+            }
+        });
+
+        // Click anywhere on terminal auto focuses command input
+        document.getElementById('main-display').addEventListener('click', () => {
+            commandInput.focus();
+        });
+
+        // Game Boot Sequence
+        window.onload = () => {
+            updateUIHeader();
+            startHardwareTickLoop();
+
+            printToTerminal("==================================================================", "system");
+            printToTerminal("DEPARTAMENTO DE POLÍCIA FORENSE - UNIDADE DE CRIMES CIBERNÉTICOS", "system");
+            printToTerminal("INVESTIGAÇÃO DO SISTEMA DOS DONETRINO (SABOTAGEM GOVERNAMENTAL)", "warning");
+            printToTerminal("==================================================================\n");
+            printToTerminal("ATENÇÃO PERITO: O jogo NÃO dará dicas fáceis sobre o que analisar ou expurgar.");
+            printToTerminal("Sua estratégia, lógica e dedução determinam a integridade do Kernel.\n");
+            printToTerminal("Digite 'HELP' para abrir o MANUAL FORENSE COMPLETO e guia do PURGE.\n");
+
+            document.body.addEventListener('click', () => {
+                initAudio();
+            }, { once: true });
+        };
+    </script>
+</body>
+</html>
