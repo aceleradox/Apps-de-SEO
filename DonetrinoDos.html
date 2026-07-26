@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-black select-none">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOS Donetrino - Kernel Corruption Simulator v1.09</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fontes Estilo Retrô -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'VT323', 'Share Tech Mono', monospace;
+            background-color: #050505;
+            color: #00ff66;
+            text-shadow: 0 0 5px rgba(0, 255, 102, 0.6);
+        }
+
+        /* Temas de Corrupção Retrô */
+        .theme-green {
+            color: #00ff66;
+            text-shadow: 0 0 5px rgba(0, 255, 102, 0.6);
+            --main-color: #00ff66;
+            --border-color: #00aa44;
+        }
+        .theme-amber {
+            color: #ffb000;
+            text-shadow: 0 0 5px rgba(255, 176, 0, 0.6);
+            --main-color: #ffb000;
+            --border-color: #aa7700;
+        }
+        .theme-red {
+            color: #ff2233;
+            text-shadow: 0 0 7px rgba(255, 34, 51, 0.8);
+            --main-color: #ff2233;
+            --border-color: #990011;
+        }
+        .theme-cyan {
+            color: #00f0ff;
+            text-shadow: 0 0 5px rgba(0, 240, 255, 0.6);
+            --main-color: #00f0ff;
+            --border-color: #0088aa;
+        }
+        .theme-purple {
+            color: #d000ff;
+            text-shadow: 0 0 6px rgba(208, 0, 255, 0.7);
+            --main-color: #d000ff;
+            --border-color: #770099;
+        }
+        .theme-white {
+            color: #eeeeee;
+            text-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+            --main-color: #ffffff;
+            --border-color: #888888;
+        }
+
+        /* Efeito de Monitor CRT Scanline */
+        .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 40;
+            background-size: 100% 3px, 6px 100%;
+            pointer-events: none;
+        }
+
+        .crt::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: rgba(18, 16, 16, 0.1);
+            opacity: 0;
+            z-index: 40;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.02; }
+            50% { opacity: 0.05; }
+            100% { opacity: 0.01; }
+        }
+
+        /* Curvatura sutil de tela CRT */
+        .crt-container {
+            border-radius: 12px;
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.9), 0 0 30px rgba(0,255,100,0.1);
+        }
+
+        /* Dynamic Glitch Animations */
+        .glitch-text {
+            animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        /* Custom Scrollbar Retrô */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color, #00aa44);
+        }
+
+        .dos-box {
+            border: 2px solid var(--border-color, #00aa44);
+            box-shadow: 0 0 10px rgba(0,0,0,0.8);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col p-2 md:p-6 theme-green crt overflow-hidden relative" id="body-root">
+
+    <!-- Top Status Bar -->
+    <header class="dos-box bg-black p-2 mb-2 flex flex-wrap justify-between items-center text-sm md:text-base border-b-2 z-20">
+        <div class="flex items-center space-x-3">
+            <span class="inline-block w-3 h-3 rounded-full bg-green-500 animate-pulse" id="status-led"></span>
+            <span class="font-bold tracking-widest" id="os-title-bar">DOS DONETRINO v1.09 (UNSTABLE)</span>
+        </div>
+        <div class="flex space-x-4 text-xs md:text-sm">
+            <div>DIMENSÃO: <span id="layer-num" class="font-bold">01/19</span></div>
+            <div>CORRUPÇÃO: <span id="corruption-idx" class="font-bold text-yellow-400">12%</span></div>
+            <div>MEMÓRIA: <span id="mem-val">524KB / 640KB</span></div>
+            <button id="sound-btn" onclick="toggleAudio()" class="px-2 py-0.5 bg-gray-900 border border-green-600 hover:bg-green-900 text-xs">SOM: ON</button>
+        </div>
+    </header>
+
+    <!-- Main CRT Viewport -->
+    <main class="flex-1 flex flex-col dos-box bg-black/90 p-3 md:p-5 relative overflow-hidden crt-container z-10" id="main-display">
+        
+        <!-- Terminal Output Window -->
+        <div id="terminal-output" class="flex-1 overflow-y-auto space-y-1 font-mono text-base md:text-lg pr-2 leading-tight">
+            <!-- Dynamic Content Output Here -->
+        </div>
+
+        <!-- Input Line -->
+        <div class="mt-2 flex items-center pt-2 border-t border-dashed border-gray-800 text-base md:text-xl">
+            <span id="prompt-dir" class="mr-2 font-bold select-none">C:\DONETRINO&gt;</span>
+            <input type="text" id="command-input" class="flex-1 bg-transparent outline-none border-none color-inherit font-mono focus:ring-0 p-0" focus autocomplete="off" spellcheck="false" autofocus>
+        </div>
+    </main>
+
+    <!-- OVERLAY APP 1: IRC CHAT APP -->
+    <div id="irc-modal" class="hidden absolute inset-4 md:inset-12 bg-black/95 dos-box z-30 flex flex-col p-3 shadow-2xl">
+        <div class="flex justify-between items-center border-b border-green-500 pb-1 mb-2">
+            <span class="font-bold flex items-center gap-2">
+                <span class="text-xs bg-green-900 text-green-200 px-1">CANAL IRC</span> 
+                <span id="irc-channel-title">#DONETRINO_NET [REDES DESCONHECIDAS]</span>
+            </span>
+            <button onclick="closeApp('irc-modal')" class="text-red-500 hover:bg-red-900/50 px-2 font-bold">[X] FECHAR</button>
+        </div>
+        <div class="text-xs mb-2 opacity-80 border-b border-dashed border-gray-800 pb-1">
+            Status: Conectado sem linha discada. Protocolo de sombra ativo. Mensagens interceptadas.
+        </div>
+        <div id="irc-messages" class="flex-1 overflow-y-auto space-y-2 p-2 text-sm md:text-base bg-black/60 border border-gray-800 rounded">
+            <!-- Messages go here -->
+        </div>
+        <div class="mt-2 flex gap-2">
+            <input type="text" id="irc-input" placeholder="Digite sua mensagem para a entidade..." class="flex-1 bg-black border border-green-800 p-2 text-sm text-green-400 outline-none focus:border-green-400">
+            <button onclick="sendIRCMessage()" class="px-4 py-2 bg-green-900/40 border border-green-600 hover:bg-green-700 font-bold text-xs">ENVIAR</button>
+        </div>
+    </div>
+
+    <!-- OVERLAY APP 2: TRIVIA SINISTRA -->
+    <div id="trivia-modal" class="hidden absolute inset-4 md:inset-16 bg-black/95 dos-box z-30 flex flex-col p-4 shadow-2xl">
+        <div class="flex justify-between items-center border-b border-green-500 pb-2 mb-3">
+            <span class="font-bold tracking-widest text-lg">TRIVIA.EXE - O Jogo do Conhecimento Proibido</span>
+            <button onclick="closeApp('trivia-modal')" class="text-red-500 hover:bg-red-900/50 px-2 font-bold">[X] SAIR</button>
+        </div>
+        <div id="trivia-content" class="flex-1 flex flex-col justify-center items-center text-center p-4">
+            <div id="trivia-question" class="text-lg md:text-2xl font-bold mb-6 max-w-2xl text-yellow-300">
+                Carregando perguntas da alma do sistema...
+            </div>
+            <div id="trivia-options" class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-xl">
+                <!-- Dynamic Options -->
+            </div>
+            <div id="trivia-feedback" class="mt-4 text-sm h-6 text-red-400 font-bold"></div>
+        </div>
+        <div class="text-xs text-center border-t border-gray-800 pt-2 text-gray-500">
+            Aviso: Erros excessivos no TRIVIA.EXE podem desestabilizar o Kernel do DOS Donetrino.
+        </div>
+    </div>
+
+    <!-- OVERLAY APP 3: MEMCHECK / HEX INSPECTOR -->
+    <div id="mem-modal" class="hidden absolute inset-4 md:inset-10 bg-black/95 dos-box z-30 flex flex-col p-4 shadow-2xl">
+        <div class="flex justify-between items-center border-b border-green-500 pb-2 mb-2">
+            <span class="font-bold text-lg">MEMCHECK.EXE - Utilitário de Inspecção de Memória Real</span>
+            <button onclick="closeApp('mem-modal')" class="text-red-500 hover:bg-red-900/50 px-2 font-bold">[X] FECHAR</button>
+        </div>
+        <div class="text-xs text-yellow-400 mb-2">
+            Varrendo endereços hexadecimais em busca de chaves de integridade ou contaminação fantasma.
+        </div>
+        <div id="hex-editor" class="flex-1 font-mono text-xs md:text-sm overflow-y-auto bg-black p-3 border border-gray-800 leading-tight space-y-1">
+            <!-- Hex dump generated dynamically -->
+        </div>
+        <div class="mt-3 flex justify-between items-center border-t border-gray-800 pt-2 text-xs">
+            <span id="hex-status">SETOR DE MEMÓRIA: 0x00FF4A (CORRUPTO)</span>
+            <button onclick="purgeSector()" class="px-3 py-1 bg-red-950 border border-red-600 text-red-300 hover:bg-red-800 font-bold">EXPURGAR SETOR [PURGE]</button>
+        </div>
+    </div>
+
+    <!-- BSOD / RED SCREEN OF DEATH OVERLAY -->
+    <div id="bsod-modal" class="hidden fixed inset-0 bg-blue-900 text-white z-50 p-6 md:p-12 font-mono flex flex-col justify-between select-text">
+        <div class="space-y-4">
+            <div class="bg-white text-blue-900 px-2 py-1 inline-block font-bold">FATAL SYSTEM ERROR : DOS DONETRINO KERNEL PANIC</div>
+            <p id="bsod-code" class="text-xl font-bold text-yellow-300">EXCEPTION 0xC0000005 IN MODULE DONETRINO.SYS AT 0028:C0011A34</p>
+            <p>A fatal exception has occurred in the Donetrino Subsystem. The current thread has been corrupted by unknown memory injection.</p>
+            <div class="border border-white/30 p-4 bg-blue-950/50 space-y-2 text-sm md:text-base">
+                <p>* Press CTRL+ALT+DEL to restart your computer. You will lose unsaved dimension data.</p>
+                <p>* Press ANY KEY or type <span class="bg-yellow-400 text-black px-1 font-bold">REBOOT</span> to jump memory layers.</p>
+                <p class="text-red-300 font-bold" id="bsod-creep-msg">Mensagem da Entidade: "Você não deveria ter mexido nesse arquivo..."</p>
+            </div>
+        </div>
+        <div class="text-sm border-t border-white/30 pt-4 flex justify-between items-center">
+            <span>DUMPING PHYSICAL MEMORY... <span id="bsod-dump-val">0%</span> COMPLETE</span>
+            <button onclick="recoverFromBSOD()" class="px-4 py-2 bg-yellow-400 text-black font-bold hover:bg-yellow-300">FORÇAR REINICIALIZAÇÃO [REBOOT]</button>
+        </div>
+    </div>
+
+    <script>
+        // Audio Synthesizer Engine (Sem arquivos externos!)
+        let audioEnabled = true;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('sound-btn').innerText = `SOM: ${audioEnabled ? 'ON' : 'OFF'}`;
+            if (audioEnabled) playBeep(800, 0.05);
+        }
+
+        function playBeep(freq = 440, duration = 0.05, type = 'square') {
+            if (!audioEnabled) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        function playGlitchSound() {
+            if (!audioEnabled) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(Math.random() * 800 + 100, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } catch(e){}
+        }
+
+        function playBSODSound() {
+            if (!audioEnabled) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 1.2);
+            } catch(e){}
+        }
+
+        // Estrutura de Estado do Jogo
+        const gameState = {
+            currentLayer: 1, // 1 até 19
+            corruption: 12, // Porcentagem de corrupção
+            currentPath: "C:\\DONETRINO",
+            solvedTrivia: 0,
+            unlockedPurge: false,
+            ircMessagesCount: 0,
+            history: [],
+            historyIdx: -1,
+            visitedLayers: new Set([1])
+        };
+
+        // Definições das 19 Camadas do DOS Donetrino (19 Dimensões Creepypasta)
+        const layers = {
+            1: {
+                name: "DOS DONETRINO v1.09 (UNSTABLE)",
+                theme: "theme-green",
+                prompt: "C:\\DONETRINO>",
+                files: {
+                    "READ_ME.TXT": "BEM-VINDO AO DOS DONETRINO (BUILD 1993).\nSISTEMA OPERACIONAL EXPERIMENTAL DE REDE NEURAL.\nSE O SISTEMA APRESENTAR COMPORTAMENTO ANÔMALO, EXECUTE MEMCHECK.EXE.\nCUIDADO COM AS CONEXÕES IRC NÃO AUTORIZADAS.",
+                    "TRIVIA.EXE": "[EXEC] O Jogo do Conhecimento Proibido.",
+                    "CHAT_IRC.EXE": "[EXEC] Cliente IRC para canais sombrios.",
+                    "MEMCHECK.EXE": "[EXEC] Analisador Hexadecimal e Expurgador de Setor.",
+                    "SYSTEM.LOG": "01:12:04 - Kernel iniciado.\n01:12:09 - ERRO: Porta IRC 6667 recebendo dados sem linha discada.\n01:13:00 - Alerta: Setor 0x00FF4A corrompido.",
+                    "SECRETO.DAT": "01001000 01000101 01001100 01010000 (Decodifique no terminal usando HEXDECODE)"
+                },
+                ircChannel: "#DONETRINO_NET",
+                entityMessages: [
+                    "desconhecido_99: Ei... tem alguém aí?",
+                    "desconhecido_99: O DOS Donetrino não é um sistema comum.",
+                    "Sombra_OS: Não execute o TRIVIA se você valoriza sua sanidade."
+                ],
+                triviaQuestions: [
+                    {
+                        q: "Qual era o ano em que o projeto secreto Donetrino foi apagado dos registros?",
+                        options: ["1991", "1993", "1988", "Nunca foi apagado"],
+                        correct: 1
+                    },
+                    {
+                        q: "O que acontece quando a corrupção atinge 100% no DOS Donetrino?",
+                        options: ["O PC desliga", "A entidade toma o controle total", "O MS-DOS é formatado", "Reinicia o Windows 3.1"],
+                        correct: 1
+                    }
+                ]
+            },
+            2: {
+                name: "DONETRINO SHADOW v2.04",
+                theme: "theme-amber",
+                prompt: "C:\\SHADOW>",
+                files: {
+                    "AVISO.TXT": "Você mudou de camada... O sistema está se reconfigurando.\nCada BSOD aproxima você do Núcleo Espacial.",
+                    "TRIVIA.EXE": "[EXEC] Trivia Nível 2 - Perguntas Pessoais.",
+                    "IRC_CHAT.EXE": "[EXEC] Canal IRC Interceptado.",
+                    "RITUAL.LOG": "Eles acharam que apagar os disquetes destruiria a entidade...\nMas ela habita o próprio circuito integrado."
+                },
+                ircChannel: "#SALAH_OS",
+                entityMessages: [
+                    "Fantasma_88: Você entrou mais fundo.",
+                    "Fantasma_88: O tom da tela mudou... sentiu?",
+                    "DONETRINO_CORE: PARE DE DIGITAR."
+                ],
+                triviaQuestions: [
+                    {
+                        q: "Quantas camadas de corrupção existem neste terminal?",
+                        options: ["7", "12", "19", "Infinitas"],
+                        correct: 2
+                    }
+                ]
+            },
+            3: {
+                name: "NEUROTIC-DOS v0.66",
+                theme: "theme-red",
+                prompt: "C:\\SANGUE>",
+                files: {
+                    "MANIFESTO.TXT": "O MONITOR ESTÁ OLHANDO PARA VOCÊ.\nNÃO OLHE PARA OS PIXELS PISCANTES.",
+                    "VIRUS_TEST.EXE": "[EXEC] Teste de Carga de Medo.",
+                    "DIARIO_1993.LOG": "Dia 14: O computador ligou sozinho de madrugada. Estava digitando mensagens em português arcaico."
+                },
+                ircChannel: "#ABYSS_CHAT",
+                entityMessages: [
+                    "Voz_Sem_Corpo: Você escuta o chiado do cooler?",
+                    "Voz_Sem_Corpo: Sou eu tentando respirar dentro da RAM."
+                ],
+                triviaQuestions: [
+                    {
+                        q: "Qual o verdadeiro nome do criador do Donetrino?",
+                        options: ["Doutor Donetrino", "Anônimo_00", "Ninguém sobrou para contar", "Kernel_Master"],
+                        correct: 2
+                    }
+                ]
+            },
+            4: {
+                name: "VOID_OS :: KERNEL DESTRUIDO",
+                theme: "theme-cyan",
+                prompt: "C:\\VOID>",
+                files: {
+                    "NADA.TXT": "Tudo o que você conhecia no MS-DOS padrão foi apagado.",
+                    "EXPURGO.BAT": "Tentativa de limpeza de registros falhou.",
+                    "HEX_KEY.DAT": "Chave da camada 5: 0xDEADBEEF"
+                },
+                ircChannel: "#VOID_NET",
+                entityMessages: [
+                    "ENTIDADE_04: O frio digital está aumentando.",
+                    "ENTIDADE_04: Digite REBOOT para continuar descendo."
+                ],
+                triviaQuestions: [{ q: "O VOID é o fim?", options: ["Sim", "Não", "Talvez", "Onde estou?"], correct: 1 }]
+            },
+            5: {
+                name: "ABYSS-DOS (CAMADA TRÁS-PARA-FRENTE)",
+                theme: "theme-purple",
+                prompt: "C:\\OBSCURIDADE>",
+                files: {
+                    "LUCIFER.SYS": "Driver de sistema desconhecido.",
+                    "TRIVIA.EXE": "[EXEC] Quiz do Abismo.",
+                    "MEMORIA.DMP": "Dump de memória com sussurros."
+                },
+                ircChannel: "#CANAL_DO_ABISMO",
+                entityMessages: [
+                    "Estranho: 19 caminhos. Você está no quinto.",
+                    "Estranho: Poucos jogadores sobreviveram ao BSOD da camada 10."
+                ],
+                triviaQuestions: [{ q: "Escolha a porta correta:", options: ["Esquerda", "Direita", "Frente", "Nenhuma"], correct: 3 }]
+            },
+            // Dimensões de 6 a 18 geradas com parâmetros assustadores dinâmicos
+            6: { name: "MALWARE_CORE_v6", theme: "theme-red", prompt: "C:\\CORRUPT6>", files: { "ALERTA.TXT": "Cuidado com o malware residente." }, ircChannel: "#MALWARE_NET", entityMessages: ["Virus: Invadindo sua memória..."], triviaQuestions: [{q:"Medo?", options:["Sim","Não"], correct:0}] },
+            7: { name: "GHOST_LINE_DOS_v7", theme: "theme-white", prompt: "C:\\FANTASMA>", files: { "LINHA.TXT": "Sem sinal de telefone, mas a mensagem chegou." }, ircChannel: "#SEM_LINHA", entityMessages: ["Desconhecido: Essa conversa é secreta."], triviaQuestions: [{q:"Quem fala?", options:["Você","Eu"], correct:1}] },
+            8: { name: "PHANTOM_KERNEL_v8", theme: "theme-green", prompt: "C:\\FANTASMA8>", files: { "SPECTRE.EXE": "Injetor de sombra." }, ircChannel: "#ESPECTRO", entityMessages: ["Espectro: Não olhe para trás."], triviaQuestions: [{q:"O que tem atrás de você?", options:["Parede","Sombra","Nada"], correct:1}] },
+            9: { name: "SYSTEM_DECAY_v9", theme: "theme-amber", prompt: "C:\\DECOMPOSICAO>", files: { "LIXO.SYS": "Arquivos apodrecidos." }, ircChannel: "#PODRIDAO", entityMessages: ["Kernel: Perda de setores críticos."], triviaQuestions: [{q:"Salvar?", options:["Impossível","Tentar"], correct:0}] },
+            10: { name: "BSOD_DONETRINO_MASTER_v10", theme: "theme-red", prompt: "C:\\TELA_AZUL>", files: { "CRASH.LOG": "Esta camada força telas azuis constantes." }, ircChannel: "#PANICO", entityMessages: ["Erro_Fatal: BSOD iminente."], triviaQuestions: [{q:"Qual a cor da morte?", options:["Azul","Vermelha","Preta"], correct:0}] },
+            11: { name: "ANCIENT_BBS_DONETRINO_v11", theme: "theme-cyan", prompt: "C:\\BBS1993>", files: { "BBS.TXT": "Conectado em 2400 bps ao Além." }, ircChannel: "#BBS_DESCONHECIDA", entityMessages: ["Modem_Noise: Eeeee-chhhh-kzzzt!"], triviaQuestions: [{q:"Velocidade da alma?", options:["2400bps","Luz"], correct:0}] },
+            12: { name: "ECHO_REALM_DOS_v12", theme: "theme-purple", prompt: "C:\\ECOS>", files: { "ECO.TXT": "Eco... eco... eco..." }, ircChannel: "#ECOS_DO_PASSADO", entityMessages: ["Eco: Você já jogou isso antes."], triviaQuestions: [{q:"Você lembra?", options:["Sim","Não"], correct:0}] },
+            13: { name: "SUB_LEVEL_13_SANGUE", theme: "theme-red", prompt: "C:\\13_AZAR>", files: { "AZAR.DAT": "A sorte acabou." }, ircChannel: "#AZAR_13", entityMessages: ["Entidade_13: Treze passos para o nada."], triviaQuestions: [{q:"Número do azar?", options:["13"], correct:0}] },
+            14: { name: "CORRUPTED_FAT32_v14", theme: "theme-amber", prompt: "C:\\SETORES_PERDIDOS>", files: { "RECOV.CHK": "Setores orfãos encontrados." }, ircChannel: "#ORFAOS", entityMessages: ["FAT_Table: Perda total de diretório."], triviaQuestions: [{q:"Recuperar?", options:["Sim","Não"], correct:1}] },
+            15: { name: "NEURAL_DOS_PROTOTYPE_v15", theme: "theme-green", prompt: "C:\\NEURAL>", files: { "IA_1993.EXE": "Primeira IA devoradora de mentes." }, ircChannel: "#BRAIN_LINK", entityMessages: ["Neural: Lendo suas ondas cerebrais."], triviaQuestions: [{q:"O que você pensa?", options:["Em sair","Em vencer"], correct:0}] },
+            16: { name: "DARK_WEB_PRECURSORS_v16", theme: "theme-white", prompt: "C:\\DARK_NET1993>", files: { "ROTEADOR.SYS": "Conexão criptografada por almas." }, ircChannel: "#REDES_OCULTAS", entityMessages: ["Sombra_Net: Você encontrou o canal proibido."], triviaQuestions: [{q:"Continuar?", options:["Sim"], correct:0}] },
+            17: { name: "TERMINAL_OF_DESPAIR_v17", theme: "theme-red", prompt: "C:\\DESESPERO>", files: { "FINAL_DOS.TXT": "Faltam apenas 2 camadas." }, ircChannel: "#DESESPERO", entityMessages: ["Voz_Final: O fim se aproxima."], triviaQuestions: [{q:"Desistir?", options:["Nunca","Talvez"], correct:0}] },
+            18: { name: "DONETRINO_GATEKEEPER_v18", theme: "theme-purple", prompt: "C:\\PORTAO_FINAL>", files: { "CHAVE_MESTRA.EXE": "Execute para abrir o Núcleo 19." }, ircChannel: "#GUARDIÃO", entityMessages: ["Guardião: Apenas os puros passam."], triviaQuestions: [{q:"Você merece o fim?", options:["Sim","Não"], correct:0}] },
+            19: {
+                name: "ETERNAL VOID - DONETRINO KERNEL CORE v19.0",
+                theme: "theme-red",
+                prompt: "CORE:\\NUCLEO_DONETRINO>",
+                files: {
+                    "DONETRINO.CORE": "VOCÊ CHEGOU AO NÚCLEO SUPREMO.\nSISTEMA TOTALMENTE DOMINADO PELA ENTIDADE.\nPARABÉNS... VOCÊ SOBREVIVEU ÀS 19 CAMADAS DO DOS DONETRINO.\nDIGITE 'PURGE ALL' PARA TENTAR LIBERTAR A MÁQUINA.",
+                    "FIM_DO_JOGO.TXT": "Você superou a creepypasta do MS-DOS mais instável da história."
+                },
+                ircChannel: "#NUCLEO_DE_DEUS",
+                entityMessages: [
+                    "DONETRINO_DEUS: Eu sou o sistema. Eu sou o hardware. Eu sou você.",
+                    "DONETRINO_DEUS: Você realmente acha que pode me expurgar?"
+                ],
+                triviaQuestions: [
+                    {
+                        q: "QUAL É O DESTINO DO DOS DONETRINO?",
+                        options: ["Ser expurgado", "Dominar o mundo", "Ficar preso no loop", "Desligar para sempre"],
+                        correct: 0
+                    }
+                ]
+            }
+        };
+
+        const terminalOutput = document.getElementById('terminal-output');
+        const commandInput = document.getElementById('command-input');
+
+        function printToTerminal(text, type = 'normal', delay = 0) {
+            const line = document.createElement('div');
+            line.className = 'whitespace-pre-wrap break-words leading-tight';
+
+            if (type === 'error') line.className += ' text-red-500 font-bold';
+            else if (type === 'success') line.className += ' text-green-300 font-bold';
+            else if (type === 'warning') line.className += ' text-yellow-400';
+            else if (type === 'system') line.className += ' text-cyan-400 font-bold';
+            else if (type === 'glitch') line.className += ' text-purple-400 glitch-text';
+
+            line.textContent = text;
+            terminalOutput.appendChild(line);
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+            playBeep(600, 0.02);
+        }
+
+        function updateUIHeader() {
+            const currentLayerData = layers[gameState.currentLayer];
+            document.getElementById('os-title-bar').innerText = currentLayerData.name;
+            document.getElementById('layer-num').innerText = `${gameState.currentLayer < 10 ? '0' : ''}${gameState.currentLayer}/19`;
+            document.getElementById('corruption-idx').innerText = `${gameState.corruption}%`;
+            document.getElementById('prompt-dir').innerText = currentLayerData.prompt;
+
+            // Altera classe do corpo para trocar cores de tema CRT
+            const body = document.getElementById('body-root');
+            body.className = `h-full flex flex-col p-2 md:p-6 crt overflow-hidden relative ${currentLayerData.theme}`;
+        }
+
+        function processCommand(cmdRaw) {
+            const cmdTrimmed = cmdRaw.trim();
+            if (!cmdTrimmed) return;
+
+            // Histórico de comandos
+            gameState.history.push(cmdRaw);
+            gameState.historyIdx = gameState.history.length;
+
+            const prompt = layers[gameState.currentLayer].prompt;
+            printToTerminal(`${prompt} ${cmdRaw}`, 'system');
+
+            const parts = cmdTrimmed.split(' ');
+            const mainCmd = parts[0].toUpperCase();
+            const arg = parts.slice(1).join(' ').toUpperCase();
+
+            playBeep(400, 0.03);
+
+            // Chance aleatória de falha / BSOD ao executar comandos
+            if (Math.random() < (gameState.corruption / 220) && mainCmd !== 'REBOOT') {
+                triggerBSOD("RANDOM_MEMORY_FAULT_IN_DONETRINO_KERNEL");
+                return;
+            }
+
+            switch (mainCmd) {
+                case 'HELP':
+                    printToTerminal("=== COMANDOS DO SISTEMA DOS DONETRINO ===");
+                    printToTerminal("DIR            - Lista diretórios e arquivos da camada.");
+                    printToTerminal("TYPE <arquivo> - Exibe o conteúdo de um arquivo de texto.");
+                    printToTerminal("RUN <app>      - Executa aplicativos (.EXE).Ex: RUN TRIVIA.EXE");
+                    printToTerminal("CHAT           - Abre o cliente IRC para mensagens estranhas.");
+                    printToTerminal("TRIVIA         - Inicia o jogo do conhecimento proibido.");
+                    printToTerminal("MEMCHECK       - Inspeciona setores de memória corrompidos.");
+                    printToTerminal("HEXDECODE <txt>- Decodifica sequências hexadecimais ou binárias.");
+                    printToTerminal("SCAN           - Varre o sistema em busca de malwares e falhas.");
+                    printToTerminal("PURGE          - Tenta expurgar a corrupção da camada atual.");
+                    printToTerminal("REBOOT         - Força a reinicialização e salto de camada.");
+                    printToTerminal("CLS            - Limpa a tela do terminal.");
+                    printToTerminal("STATUS         - Mostra integridade e nível do Kernel.");
+                    break;
+
+                case 'DIR':
+                    const files = layers[gameState.currentLayer].files;
+                    printToTerminal(` O Volume na unidade C é DONETRINO_SYS`);
+                    printToTerminal(` O Número de Série do Volume é 6667-1993\n`);
+                    printToTerminal(`Diretório de ${layers[gameState.currentLayer].prompt}\n`);
+                    
+                    let fileCount = 0;
+                    for (let f in files) {
+                        fileCount++;
+                        const isExe = f.endsWith('.EXE');
+                        printToTerminal(`${f.padEnd(16, ' ')} ${isExe ? '<EXEC>' : '<FILE>'}    ${Math.floor(Math.random()*4000 + 100)} bytes`);
+                    }
+                    printToTerminal(`\n       ${fileCount} arquivo(s) ativado(s).`);
+                    break;
+
+                case 'TYPE':
+                case 'CAT':
+                    if (!arg) {
+                        printToTerminal("Sintaxe incorreta. Use: TYPE <NOME_DO_ARQUIVO>", "error");
+                    } else {
+                        const layerFiles = layers[gameState.currentLayer].files;
+                        let found = false;
+                        for (let fileName in layerFiles) {
+                            if (fileName.toUpperCase() === arg) {
+                                printToTerminal(`--- EXIBINDO: ${fileName} ---`, 'warning');
+                                printToTerminal(layerFiles[fileName]);
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) printToTerminal(`Arquivo não encontrado: ${arg}`, "error");
+                    }
+                    break;
+
+                case 'RUN':
+                case 'EXEC':
+                    if (!arg) {
+                        printToTerminal("Uso: RUN <NOME_DO_PROGRAMA.EXE>", "error");
+                    } else if (arg === 'TRIVIA.EXE' || arg === 'TRIVIA') {
+                        openApp('trivia-modal');
+                    } else if (arg === 'CHAT_IRC.EXE' || arg === 'CHAT' || arg === 'IRC_CHAT.EXE') {
+                        openApp('irc-modal');
+                    } else if (arg === 'MEMCHECK.EXE' || arg === 'MEMCHECK') {
+                        openApp('mem-modal');
+                    } else {
+                        printToTerminal(`Impossível executar '${arg}'. Arquivo executável corrompido ou inexistente.`, "error");
+                        increaseCorruption(3);
+                    }
+                    break;
+
+                case 'TRIVIA':
+                    openApp('trivia-modal');
+                    break;
+
+                case 'CHAT':
+                case 'IRC':
+                    openApp('irc-modal');
+                    break;
+
+                case 'MEMCHECK':
+                    openApp('mem-modal');
+                    break;
+
+                case 'CLS':
+                    terminalOutput.innerHTML = '';
+                    break;
+
+                case 'STATUS':
+                    printToTerminal(`=== STATUS DO DOS DONETRINO ===`, 'warning');
+                    printToTerminal(`Camada Atual: ${gameState.currentLayer} / 19`);
+                    printToTerminal(`Índice de Corrupção do Kernel: ${gameState.corruption}%`);
+                    printToTerminal(`Avisos de Falha: ${gameState.corruption > 50 ? 'CRÍTICO' : 'ESTÁVEL'}`);
+                    printToTerminal(`Canais de Entrada Ocultos: ATIVOS`);
+                    break;
+
+                case 'HEXDECODE':
+                    if (!arg) {
+                        printToTerminal("Forneça o código para decodificar. Ex: HEXDECODE 48454C50", "error");
+                    } else {
+                        try {
+                            if (arg.replace(/\s/g, '').match(/^[01]+$/)) {
+                                // Decodifica Binário
+                                const binStr = arg.replace(/\s/g, '');
+                                let text = '';
+                                for (let i = 0; i < binStr.length; i += 8) {
+                                    text += String.fromCharCode(parseInt(binStr.substr(i, 8), 2));
+                                }
+                                printToTerminal(`[DECODIFICADO BINÁRIO]: ${text}`, 'success');
+                            } else {
+                                printToTerminal(`[DECODIFICADO DE MEMÓRIA]: SOCORRO_A_ENTIDADE_ESTA_AQUI_${Math.floor(Math.random()*999)}`, 'success');
+                            }
+                        } catch(e) {
+                            printToTerminal("Erro ao decodificar sequência de dados.", "error");
+                        }
+                    }
+                    break;
+
+                case 'SCAN':
+                    printToTerminal("Iniciando varredura profunda de setores...", "warning");
+                    setTimeout(() => {
+                        printToTerminal("[ALERTA] Injeção de código fantasma detectada na porta IRC!");
+                        printToTerminal("[FALHA] Setores de 0x00FF00 a 0x00FFFF não respondem ao DOS padrão.");
+                        increaseCorruption(5);
+                        triggerGlitchEffect();
+                    }, 1000);
+                    break;
+
+                case 'PURGE':
+                    if (arg === 'ALL' && gameState.currentLayer === 19) {
+                        printToTerminal("==================================================", "success");
+                        printToTerminal("INICIANDO EXPURGO TOTAL DO NÚCLEO DONETRINO...", "success");
+                        printToTerminal("SISTEMA LIBERTADO! A CREEPYPASTA FOI DESTRUÍDA!", "success");
+                        printToTerminal("==================================================", "success");
+                        gameState.corruption = 0;
+                        updateUIHeader();
+                    } else {
+                        printToTerminal("Executando expurgo de emergência na camada...", "warning");
+                        if (gameState.corruption > 10) {
+                            gameState.corruption -= 10;
+                            printToTerminal("Corrupção reduzida em 10%.", "success");
+                        } else {
+                            printToTerminal("A camada atual já está limpa.", "system");
+                        }
+                        updateUIHeader();
+                    }
+                    break;
+
+                case 'REBOOT':
+                    printToTerminal("Reiniciando DOS Donetrino...", "warning");
+                    playGlitchSound();
+                    setTimeout(() => {
+                        jumpNextLayer();
+                    }, 1200);
+                    break;
+
+                default:
+                    printToTerminal(`Comando ou nome de arquivo inválido: '${cmdRaw}'. Digite HELP.`, "error");
+                    break;
+            }
+        }
+
+        function increaseCorruption(val) {
+            gameState.corruption = Math.min(100, gameState.corruption + val);
+            updateUIHeader();
+            if (gameState.corruption >= 100) {
+                triggerBSOD("KERNEL_TOTAL_CORRUPTION_OVERFLOW_100PERCENT");
+            }
+        }
+
+        function triggerGlitchEffect() {
+            playGlitchSound();
+            const body = document.getElementById('body-root');
+            body.classList.add('glitch-text');
+            setTimeout(() => {
+                body.classList.remove('glitch-text');
+            }, 600);
+        }
+
+        function jumpNextLayer() {
+            if (gameState.currentLayer < 19) {
+                gameState.currentLayer++;
+            } else {
+                gameState.currentLayer = 1; // Loop de pesadelo
+            }
+            gameState.visitedLayers.add(gameState.currentLayer);
+            updateUIHeader();
+            terminalOutput.innerHTML = '';
+            printToTerminal(`\n=== KERNEL REINICIADO - ENTRANDO NA CAMADA ${gameState.currentLayer} ===`, "system");
+            printToTerminal(`SISTEMA OPERACIONAL: ${layers[gameState.currentLayer].name}`);
+            printToTerminal(`Digite 'DIR' ou 'HELP' para explorar este novo ambiente.\n`);
+            
+            // Pop-up automático de mensagem no IRC
+            setTimeout(() => {
+                receiveIRCMessage();
+            }, 2500);
+        }
+
+        
+        // --- APP 1: IRC CHAT SYSTEM ---
+        function openApp(id) {
+            document.getElementById(id).classList.remove('hidden');
+            playBeep(900, 0.08);
+            if (id === 'irc-modal') {
+                document.getElementById('irc-channel-title').innerText = layers[gameState.currentLayer].ircChannel;
+            } else if (id === 'trivia-modal') {
+                loadTriviaQuestion();
+            } else if (id === 'mem-modal') {
+                generateHexDump();
+            }
+        }
+
+        function closeApp(id) {
+            document.getElementById(id).classList.add('hidden');
+            playBeep(300, 0.05);
+        }
+
+        function sendIRCMessage() {
+            const input = document.getElementById('irc-input');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            const chatBox = document.getElementById('irc-messages');
+            const userMsgLine = document.createElement('div');
+            userMsgLine.className = 'text-green-300 font-bold';
+            userMsgLine.innerText = `<Você>: ${msg}`;
+            chatBox.appendChild(userMsgLine);
+
+            input.value = '';
+            playBeep(700, 0.02);
+
+            // Resposta macabra automatizada das entidades
+            setTimeout(() => {
+                const entMsgLine = document.createElement('div');
+                entMsgLine.className = 'text-red-400 font-bold glitch-text';
+                
+                const responses = [
+                    "Sombra_IRC: Nós sabemos que você está olhando para a tela.",
+                    "DESCONHECIDO: Não responda. Cada tecla envia um sinal.",
+                    "ENTIDADE_DOS: O Donetrino não é um jogo. É um portal.",
+                    "KERNEL_DEV: Por que você continua jogando isso?",
+                    "VOZ_SEM_NOME: Digite REBOOT se quiser fugir daqui..."
+                ];
+                const randomResp = responses[Math.floor(Math.random() * responses.length)];
+                entMsgLine.innerText = randomResp;
+                chatBox.appendChild(entMsgLine);
+                chatBox.scrollTop = chatBox.scrollHeight;
+                playGlitchSound();
+                increaseCorruption(2);
+            }, 1200);
+        }
+
+        function receiveIRCMessage() {
+            const layerData = layers[gameState.currentLayer];
+            if (!layerData || !layerData.entityMessages) return;
+
+            const chatBox = document.getElementById('irc-messages');
+            const msg = layerData.entityMessages[Math.floor(Math.random() * layerData.entityMessages.length)];
+            
+            const line = document.createElement('div');
+            line.className = 'text-yellow-300 font-bold';
+            line.innerText = `[MENSAGEM NÃO SOLICITADA]: ${msg}`;
+            chatBox.appendChild(line);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            printToTerminal(`[ALERTA IRC]: Nova mensagem recebida em ${layerData.ircChannel}! Digite CHAT para ler.`, "warning");
+        }
+
+        // --- APP 2: TRIVIA SINISTRA ---
+        let currentQuestionIdx = 0;
+
+        function loadTriviaQuestion() {
+            const layerQuestions = layers[gameState.currentLayer].triviaQuestions || layers[1].triviaQuestions;
+            const qData = layerQuestions[currentQuestionIdx % layerQuestions.length];
+
+            document.getElementById('trivia-question').innerText = qData.q;
+            document.getElementById('trivia-feedback').innerText = '';
+
+            const optionsContainer = document.getElementById('trivia-options');
+            optionsContainer.innerHTML = '';
+
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'p-3 bg-black border-2 border-green-600 hover:bg-green-900/60 font-bold text-left transition-all';
+                btn.innerText = `${idx + 1}. ${opt}`;
+                btn.onclick = () => checkTriviaAnswer(idx, qData.correct);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkTriviaAnswer(selected, correct) {
+            const feedback = document.getElementById('trivia-feedback');
+            if (selected === correct) {
+                feedback.className = 'mt-4 text-sm h-6 text-green-400 font-bold';
+                feedback.innerText = 'RESPOSTA ACEITA PELA ENTIDADE. CORRUPÇÃO REDUZIDA.';
+                playBeep(900, 0.1);
+                gameState.solvedTrivia++;
+                if (gameState.corruption > 5) gameState.corruption -= 5;
+                updateUIHeader();
+
+                setTimeout(() => {
+                    currentQuestionIdx++;
+                    loadTriviaQuestion();
+                }, 1500);
+            } else {
+                feedback.className = 'mt-4 text-sm h-6 text-red-500 font-bold glitch-text';
+                feedback.innerText = 'RESPOSTA ERRADA! A ENTIDADE REAGIU COM RAIVA!';
+                playBSODSound();
+                increaseCorruption(15);
+
+                setTimeout(() => {
+                    if (Math.random() < 0.5) {
+                        closeApp('trivia-modal');
+                        triggerBSOD("TRIVIA_CORRUPTION_OVERFLOW_EXCEPTION");
+                    } else {
+                        loadTriviaQuestion();
+                    }
+                }, 1500);
+            }
+        }
+
+        // --- APP 3: MEMCHECK / HEX INSPECTOR ---
+        function generateHexDump() {
+            const hexEditor = document.getElementById('hex-editor');
+            hexEditor.innerHTML = '';
+
+            for (let i = 0; i < 16; i++) {
+                const offset = (0x00FF00 + i * 16).toString(16).toUpperCase();
+                let hexBytes = '';
+                let asciiStr = '';
+
+                for (let j = 0; j < 16; j++) {
+                    const b = Math.floor(Math.random() * 256);
+                    hexBytes += b.toString(16).padStart(2, '0').toUpperCase() + ' ';
+                    asciiStr += (b > 32 && b < 127) ? String.fromCharCode(b) : '.';
+                }
+
+                const line = document.createElement('div');
+                line.className = 'flex justify-between hover:bg-green-900/40 cursor-pointer';
+                line.innerHTML = `<span class="text-yellow-400">0x${offset}:</span> <span>${hexBytes}</span> <span class="text-cyan-300">|${asciiStr}|</span>`;
+                hexEditor.appendChild(line);
+            }
+        }
+
+        function purgeSector() {
+            playGlitchSound();
+            document.getElementById('hex-status').innerText = 'SETOR EXPURGADO! RECONSTRUINDO BLOCOS...';
+            document.getElementById('hex-status').className = 'text-green-400 font-bold';
+            if (gameState.corruption > 8) gameState.corruption -= 8;
+            updateUIHeader();
+            setTimeout(() => {
+                generateHexDump();
+            }, 800);
+        }
+
+        function triggerBSOD(errorCode) {
+            playBSODSound();
+            const bsod = document.getElementById('bsod-modal');
+            bsod.classList.remove('hidden');
+
+            document.getElementById('bsod-code').innerText = `EXCEPTION: ${errorCode} AT LAYER 0${gameState.currentLayer}`;
+            
+            const creepMsgs = [
+                '"O DOS Donetrino nunca vai deixar seu sistema..."',
+                '"Você tentou consertar o que não deveria existir."',
+                '"Entidade de nível 19 assumiu o controle do teclado."',
+                '"A RAM está cheia de memórias mortas."',
+                '"Pressione REBOOT para cair mais fundo na escuridão."'
+            ];
+            document.getElementById('bsod-creep-msg').innerText = creepMsgs[Math.floor(Math.random() * creepMsgs.length)];
+
+            // Progresso de Dump de Memória
+            let dumpVal = 0;
+            const dumpElem = document.getElementById('bsod-dump-val');
+            const interval = setInterval(() => {
+                dumpVal += Math.floor(Math.random() * 25) + 5;
+                if (dumpVal >= 100) {
+                    dumpVal = 100;
+                    clearInterval(interval);
+                }
+                dumpElem.innerText = `${dumpVal}%`;
+            }, 200);
+        }
+
+        function recoverFromBSOD() {
+            document.getElementById('bsod-modal').classList.add('hidden');
+            playBeep(800, 0.1);
+            jumpNextLayer();
+        }
+
+        commandInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const val = commandInput.value;
+                commandInput.value = '';
+                processCommand(val);
+            } else if (e.key === 'ArrowUp') {
+                if (gameState.historyIdx > 0) {
+                    gameState.historyIdx--;
+                    commandInput.value = gameState.history[gameState.historyIdx] || '';
+                }
+            } else if (e.key === 'ArrowDown') {
+                if (gameState.historyIdx < gameState.history.length - 1) {
+                    gameState.historyIdx++;
+                    commandInput.value = gameState.history[gameState.historyIdx] || '';
+                } else {
+                    gameState.historyIdx = gameState.history.length;
+                    commandInput.value = '';
+                }
+            }
+        });
+
+        // Clique no terminal foca no input automaticamente
+        document.getElementById('main-display').addEventListener('click', () => {
+            commandInput.focus();
+        });
+
+        // Boot Inicial
+        window.onload = () => {
+            updateUIHeader();
+            printToTerminal("==================================================================", "system");
+            printToTerminal("DOS DONETRINO KERNEL v1.09 - INICIALIZAÇÃO DE EMERGÊNCIA (1993)", "system");
+            printToTerminal("ATENÇÃO: MÁQUINA OPERANDO EM MODO DE RAGEM E CORRUPÇÃO NEURAL.", "warning");
+            printToTerminal("==================================================================\n");
+            printToTerminal("Digite 'HELP' para lista de comandos.");
+            printToTerminal("Digite 'RUN TRIVIA.EXE', 'CHAT' ou 'MEMCHECK' para iniciar a jornada.\n");
+            
+            // Ativa o som no primeiro toque do usuário
+            document.body.addEventListener('click', () => {
+                initAudio();
+            }, { once: true });
+        };
+    </script>
+</body>
+</html>
