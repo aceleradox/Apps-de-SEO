@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anti-Moralism - Proteção Contra Haters & Moralismo</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        shield: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            900: '#14532d',
+                            darkBg: '#0b0f17',
+                            cardBg: '#131b2e',
+                            border: '#1f293d'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .code-font { font-family: 'JetBrains Mono', monospace; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0b0f17; }
+        ::-webkit-scrollbar-thumb { background: #1f293d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #374151; }
+    </style>
+</head>
+<body class="bg-shield-darkBg text-slate-100 min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white">
+
+    <!-- Header / Navbar -->
+    <header class="border-b border-shield-border bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-900/40">
+                    <i class="fa-solid fa-shield-halved text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-emerald-400 bg-clip-text text-transparent">
+                        Anti-Moralism
+                    </h1>
+                    <p class="text-xs text-slate-400 hidden sm:block">Filtro Inteligente de Palavras-Chave & Anti-Hate em Redes Sociais</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-1.5"></span> Motor Ativo
+                </span>
+                <button onclick="copyCurrentBlocklist()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition flex items-center space-x-1.5 shadow-md shadow-emerald-900/30">
+                    <i class="fa-regular fa-copy"></i>
+                    <span>Copiar Lista Geral</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
+
+        <!-- Navigation Tabs -->
+        <nav class="flex space-x-1 bg-slate-900/90 p-1.5 rounded-xl border border-shield-border overflow-x-auto text-sm">
+            <button id="tab-btn-deconstruct" onclick="switchTab('deconstruct')" class="tab-btn active px-4 py-2.5 rounded-lg font-medium transition flex items-center space-x-2 whitespace-nowrap bg-emerald-600 text-white shadow">
+                <i class="fa-solid fa-cubes-stacked"></i>
+                <span>1. Desfragmentador & Obfuscação</span>
+            </button>
+            <button id="tab-btn-semantic" onclick="switchTab('semantic')" class="tab-btn px-4 py-2.5 rounded-lg font-medium transition flex items-center space-x-2 whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800">
+                <i class="fa-solid fa-network-wired"></i>
+                <span>2. Termos Similares & Euphemismos</span>
+            </button>
+            <button id="tab-btn-simulator" onclick="switchTab('simulator')" class="tab-btn px-4 py-2.5 rounded-lg font-medium transition flex items-center space-x-2 whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800">
+                <i class="fa-solid fa-[#000]"></i>
+                <i class="fa-solid fa-mask"></i>
+                <span>3. Simulador de Censura</span>
+            </button>
+            <button id="tab-btn-ai" onclick="switchTab('ai')" class="tab-btn px-4 py-2.5 rounded-lg font-medium transition flex items-center space-x-2 whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                <span>4. Detector de Moralismo com IA</span>
+            </button>
+        </nav>
+
+        <!-- TAB 1: DESFRAGMENTADOR & OBFUSCAÇÃO -->
+        <section id="tab-content-deconstruct" class="tab-content flex flex-col gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Input Control -->
+                <div class="bg-shield-cardBg p-5 rounded-2xl border border-shield-border flex flex-col gap-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-scissors text-emerald-400"></i> Palavra Raiz para Desfragmentar
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Insira uma palavra tófica ou ofensiva utilizada por haters (Exemplo: <span class="text-emerald-400 cursor-pointer underline" onclick="setInputWord('derruba')">derruba</span>, <span class="text-emerald-400 cursor-pointer underline" onclick="setInputWord('atacante')">atacante</span>, <span class="text-emerald-400 cursor-pointer underline" onclick="setInputWord('escoria')">escoria</span>).</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-xs font-medium text-slate-300">Palavra Chave</label>
+                        <div class="relative">
+                            <input type="text" id="input-word" value="derruba" placeholder="Ex: derruba" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition">
+                            <button onclick="processDeconstruction()" class="absolute right-2 top-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition">
+                                Desfragmentar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-800 pt-4 space-y-3">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Opções de Variações Generativas</span>
+                        
+                        <label class="flex items-center space-x-2 text-sm text-slate-300 cursor-pointer">
+                            <input type="checkbox" id="opt-substrings" checked onchange="processDeconstruction()" class="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-emerald-500">
+                            <span>Substrings & Fragmentos (ex: erruba, erru, bador)</span>
+                        </label>
+
+                        <label class="flex items-center space-x-2 text-sm text-slate-300 cursor-pointer">
+                            <input type="checkbox" id="opt-typos" checked onchange="processDeconstruction()" class="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-emerald-500">
+                            <span>Erros de Digitação Evasivos (ex: derrbar, deruba)</span>
+                        </label>
+
+                        <label class="flex items-center space-x-2 text-sm text-slate-300 cursor-pointer">
+                            <input type="checkbox" id="opt-leetspeak" checked onchange="processDeconstruction()" class="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-emerald-500">
+                            <span>Leetspeak & Números (ex: d3rrub4, d3rrub4dor)</span>
+                        </label>
+
+                        <label class="flex items-center space-x-2 text-sm text-slate-300 cursor-pointer">
+                            <input type="checkbox" id="opt-spacers" checked onchange="processDeconstruction()" class="rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-emerald-500">
+                            <span>Separadores Evasivos (ex: d-e-r-r-u-b-a, d.e.r.r.u.b.a)</span>
+                        </label>
+                    </div>
+
+                    <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-xs text-slate-400 flex items-start space-x-2">
+                        <i class="fa-solid fa-circle-info text-emerald-400 mt-0.5"></i>
+                        <span>Os haters desfragmentam palavras cortando o início ou o fim para que o filtro das redes sociais não identifique o termo inteiro.</span>
+                    </div>
+                </div>
+
+                <!-- Generated Variations -->
+                <div class="lg:col-span-2 bg-shield-cardBg p-5 rounded-2xl border border-shield-border flex flex-col gap-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-slate-100 flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-emerald-400"></i> Fragmentos & Variações Restritas Geradas
+                            </h3>
+                            <p class="text-xs text-slate-400">Estas são as combinações sugeridas para bloquear nas configurações de privacidade.</p>
+                        </div>
+                        <span id="fragment-count" class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-semibold">
+                            0 termos
+                        </span>
+                    </div>
+
+                    <!-- Keywords Tags Container -->
+                    <div id="fragment-results" class="flex-1 bg-slate-900/90 border border-slate-800 rounded-xl p-4 min-h-[220px] max-h-[380px] overflow-y-auto flex flex-wrap gap-2 items-start">
+                        <!-- JS injected tags -->
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                        <div class="flex items-center space-x-2">
+                            <button onclick="copyFormatted('comma')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition flex items-center space-x-1">
+                                <i class="fa-regular fa-copy"></i>
+                                <span>Formato Instagram (Vírgulas)</span>
+                            </button>
+                            <button onclick="copyFormatted('newline')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition flex items-center space-x-1">
+                                <i class="fa-regular fa-copy"></i>
+                                <span>Uma por Linha (TikTok/Discord)</span>
+                            </button>
+                            <button onclick="copyFormatted('regex')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition flex items-center space-x-1">
+                                <i class="fa-solid fa-code"></i>
+                                <span>Padrão Regex</span>
+                            </button>
+                        </div>
+                        
+                        <button onclick="addCurrentFragmentsToGlobalList()" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition shadow-md flex items-center space-x-1.5">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Adicionar à Blacklist Geral</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TAB 2: TERMOS SIMILARES & EUPHEMISMOS -->
+        <section id="tab-content-semantic" class="tab-content hidden flex-col gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Input and Search -->
+                <div class="bg-shield-cardBg p-5 rounded-2xl border border-shield-border flex flex-col gap-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-brain text-emerald-400"></i> Expansão Semântica
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Insira uma expressão ou termo de ataque moralista (Ex: <span class="text-emerald-400 cursor-pointer underline" onclick="setSemanticInput('mal elemento')">mal elemento</span>, <span class="text-emerald-400 cursor-pointer underline" onclick="setSemanticInput('escoria')">escória</span>, <span class="text-emerald-400 cursor-pointer underline" onclick="setSemanticInput('sem vergonha')">sem vergonha</span>).</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-xs font-medium text-slate-300">Expressão / Termo de Origem</label>
+                        <div class="relative">
+                            <input type="text" id="semantic-input" value="mal elemento" placeholder="Ex: mal elemento" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition">
+                            <button onclick="generateSemanticVariations()" class="absolute right-2 top-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition flex items-center space-x-1">
+                                <i class="fa-solid fa-wand-magic"></i>
+                                <span>Expandir</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-2">
+                        <div class="font-medium text-slate-300">Como funciona a expansão?</div>
+                        <p>O aplicativo mapeia sinônimos de ofensas, codinomes pejorativos, eufemismos moralistas e variações sociais usadas para ridicularizar e atacar sem usar xingamentos diretos.</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Exemplos Prontos de Ataques Moralistas</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            <button onclick="quickSemantic('mal elemento')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs">mal elemento</button>
+                            <button onclick="quickSemantic('escoria')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs">escória</button>
+                            <button onclick="quickSemantic('sem futuro')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs">sem futuro</button>
+                            <button onclick="quickSemantic('oportunista')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs">oportunista</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Semantic Results Grid -->
+                <div class="lg:col-span-2 bg-shield-cardBg p-5 rounded-2xl border border-shield-border flex flex-col gap-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-slate-100 flex items-center gap-2">
+                                <i class="fa-solid fa-layer-group text-emerald-400"></i> Mapeamento de Expressões Semelhantes
+                            </h3>
+                            <p class="text-xs text-slate-400">Abaixo estão os eufemismos, julgamentos e termos análogos encontrados.</p>
+                        </div>
+                        <span id="semantic-count" class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-semibold">
+                            0 resultados
+                        </span>
+                    </div>
+
+                    <div id="semantic-results" class="grid grid-cols-1 md:grid-cols-2 gap-3 min-h-[250px] max-h-[400px] overflow-y-auto pr-1">
+                        <!-- JS injected cards -->
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                        <span class="text-xs text-slate-400">Clique em qualquer variação para incluir na lista do seu filtro.</span>
+                        <button onclick="addAllSemanticToGlobalList()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition shadow">
+                            Adicionar Todos à Blacklist
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TAB 3: SIMULADOR DE CENSURA -->
+        <section id="tab-content-simulator" class="tab-content hidden flex-col gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- Input Comment -->
+                <div class="bg-shield-cardBg p-5 rounded-2xl border border-shield-border flex flex-col gap-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg font-semibold text-slate-100 flex items-center gap-2">
+                                <i class="fa-solid fa-keyboard text-emerald-400"></i> Testar Comentário / Texto Recebido
+                            </h2>
+                            <p class="text-xs text-slate-400">Simule como o filtro do Anti-Moralism detecta palavras desfragmentadas em mensagens reais.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <textarea id="sim-input-text" rows="6" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition resize-none" placeholder="Digite ou cole aqui um comentário com evasões... Ex: Esse sujeito é um a.t.a.c.a.n.t.e e mal element0!! derrubador profissional!"></textarea>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="loadSampleText(1)" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs">Exemplo 1: Texto Evasivo</button>
+                        <button onclick="loadSampleText(2)" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs">Exemplo 2: Ataque Moralista</button>
+                        <button onclick="loadSampleText(3)" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs">Exemplo 3: Leetspeak & Pontos</button>
+                    </div>
+
+                    <div class="pt-2">
+                        <button onclick="runCensorshipSimulation()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-semibold transition shadow-lg shadow-emerald-900/30 flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-shield-virus"></i>
+                            <span>Executar Teste de Filtro de Censura</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Simulation Output -->
+                <div class="bg-shield-cardBg p-5 rounded-2xl border border-shield-border flex flex-col gap-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-eye text-emerald-400"></i> Resultado Moderado & Censurado
+                        </h3>
+                        <p class="text-xs text-slate-400">Veja o texto limpo com termos desfragmentados devidamente mascarados.</p>
+                    </div>
+
+                    <!-- Highlighted preview box -->
+                    <div class="space-y-1">
+                        <span class="text-xs font-semibold text-slate-400">Resultado Sanitizado:</span>
+                        <div id="sim-output-censored" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 min-h-[120px] text-sm text-slate-300 code-font leading-relaxed">
+                            <span class="text-slate-500 italic">O resultado filtrado aparecerá aqui...</span>
+                        </div>
+                    </div>
+
+                    <!-- Detections list -->
+                    <div class="space-y-2 flex-1 flex flex-col">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-slate-400">Infracções & Termos Detectados:</span>
+                            <span id="sim-detected-count" class="text-xs font-bold text-amber-400">0 detectados</span>
+                        </div>
+                        <div id="sim-detected-list" class="flex-1 bg-slate-900/80 border border-slate-800 rounded-xl p-3 min-h-[100px] overflow-y-auto space-y-2">
+                            <div class="text-xs text-slate-500 text-center py-4">Nenhuma palavra bloqueada identificada ainda.</div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TAB 4: DETECTOR DE MORALISMO COM IA -->
+        <section id="tab-content-ai" class="tab-content hidden flex-col gap-6">
+            <div class="bg-shield-cardBg p-6 rounded-2xl border border-shield-border flex flex-col gap-6">
+                
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                            Análise Avançada de Moralismo & Dog Whistles (Gemini AI)
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">
+                            Utiliza Inteligência Artificial para ler frases complexas, identificar xingamentos sutis, moralismo velado e gerar automaticamente regras de bloqueio.
+                        </p>
+                    </div>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        Modelo: Gemini 3 Flash
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- AI Input -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs font-semibold text-slate-300 block mb-2">Comentário ou Post para Analisar</label>
+                            <textarea id="ai-input-text" rows="6" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition resize-none" placeholder="Cole um texto suspeito de perseguição moral ou hate... Ex: 'Essa aí não serve nem pra ser mãe, vergonha alheia total pra família, sujeito sem luz...'"></textarea>
+                        </div>
+
+                        <button onclick="runAiAnalysis()" id="btn-run-ai" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-sm font-semibold transition shadow-lg flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-microchip"></i>
+                            <span>Analisar com Inteligência Artificial</span>
+                        </button>
+                    </div>
+
+                    <!-- AI Output -->
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-semibold text-slate-200 border-b border-slate-800 pb-2 flex items-center justify-between">
+                                <span>Relatório da IA</span>
+                                <span id="ai-status-badge" class="text-xs font-normal text-slate-500">Aguardando entrada...</span>
+                            </h3>
+
+                            <div id="ai-response-container" class="space-y-3 min-h-[160px] max-h-[280px] overflow-y-auto">
+                                <p class="text-xs text-slate-500 text-center py-8">
+                                    Insira um texto ao lado e clique em "Analisar" para gerar diagnósticos de atitudes moralistas, gatilhos de agressão e extração automática de palavras-chave.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div id="ai-action-footer" class="hidden pt-4 border-t border-slate-800 flex items-center justify-end">
+                            <button onclick="importAiKeywordsToBlacklist()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition shadow">
+                                Incorporar Palavras Extraídas na Blacklist
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Global Blacklist Footer Drawer / Section -->
+        <section class="bg-shield-cardBg p-5 rounded-2xl border border-shield-border flex flex-col gap-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        <i class="fa-solid fa-shield-cat"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-semibold text-slate-100">Sua Blacklist Global Anti-Moralism</h3>
+                        <p class="text-xs text-slate-400">Termos acumulados para exportação direta aos filtros das suas redes sociais.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button onclick="clearGlobalList()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs font-medium border border-slate-700 transition">
+                        <i class="fa-solid fa-trash-can mr-1"></i> Limpar
+                    </button>
+                    <button onclick="copyCurrentBlocklist()" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition shadow flex items-center space-x-1.5">
+                        <i class="fa-regular fa-copy"></i>
+                        <span>Copiar Tudo</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Global words tags -->
+            <div id="global-blacklist-tags" class="bg-slate-900 border border-slate-800 rounded-xl p-3 min-h-[60px] max-h-[140px] overflow-y-auto flex flex-wrap gap-1.5 items-center">
+                <!-- JS injected active words -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-2xl font-medium text-sm transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center space-x-2">
+        <i class="fa-solid fa-circle-check"></i>
+        <span id="toast-message">Copiado para a área de transferência!</span>
+    </div>
+
+    <script>
+        // Global state for blacklist
+        let globalBlacklist = new Set([
+            "derruba", "derrbar", "erruba", "erru", "bador", "d.e.r.r.u.b.a",
+            "atacante", "tacant", "atac-cante", "a.t.a.c.a.n.t.e",
+            "mal elemento", "mau carater", "ma compania",
+            "escoria", "desaprovado", "rejeitado", "nao aceito"
+        ]);
+
+        let currentFragments = [];
+        let currentSemanticResults = [];
+        let aiExtractedKeywords = [];
+
+        // Predefined semantic dictionary for fallback and fast generation
+        const semanticDictionary = {
+            "mal elemento": [
+                { term: "mau caráter", category: "Moralismo Directo", risk: "Alta" },
+                { term: "má companhia", category: "Eufemismo", risk: "Média" },
+                { term: "sujeito duvidoso", category: "Julgamento Social", risk: "Média" },
+                { term: "pessima peça", category: "Gíria Pejorativa", risk: "Alta" },
+                { term: "persona non grata", category: "Exclusão", risk: "Baixa" }
+            ],
+            "escoria": [
+                { term: "não aceito", category: "Atitude Rejeição", risk: "Média" },
+                { term: "desaprovado", category: "Julgamento Moral", risk: "Média" },
+                { term: "rejeitado", category: "Exclusão Social", risk: "Média" },
+                { term: "lixo humano", category: "Agressão Grave", risk: "Alta" },
+                { term: "indesejado", category: "Rotulagem", risk: "Baixa" }
+            ],
+            "sem futuro": [
+                { term: "fracassado", category: "Ataque Pessoal", risk: "Alta" },
+                { term: "encosto", category: "Moralismo Velado", risk: "Alta" },
+                { term: "sem rumo", category: "Eufemismo", risk: "Baixa" },
+                { term: "vabundo", category: "Ofensa Direta", risk: "Alta" }
+            ],
+            "oportunista": [
+                { term: "Aproveitador", category: "Rotulagem", risk: "Média" },
+                { term: "Interesseiro", category: "Moralismo", risk: "Média" },
+                { term: "Sem escrúpulos", category: "Julgamento", risk: "Alta" }
+            ]
+        };
+
+        // Window onload initialization
+        window.onload = function() {
+            processDeconstruction();
+            generateSemanticVariations();
+            renderGlobalBlacklist();
+            runCensorshipSimulation();
+        };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-emerald-600', 'text-white', 'shadow');
+                btn.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-slate-800');
+            });
+
+            const selectedContent = document.getElementById(`tab-content-${tabId}`);
+            if(selectedContent) selectedContent.classList.remove('hidden');
+
+            const selectedBtn = document.getElementById(`tab-btn-${tabId}`);
+            if(selectedBtn) {
+                selectedBtn.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-slate-800');
+                selectedBtn.classList.add('bg-emerald-600', 'text-white', 'shadow');
+            }
+        }
+
+        function setInputWord(word) {
+            document.getElementById('input-word').value = word;
+            processDeconstruction();
+        }
+
+        function processDeconstruction() {
+            const rawInput = document.getElementById('input-word').value.trim().toLowerCase();
+            if(!rawInput) return;
+
+            const cleanWord = rawInput.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // strip accents
+            const set = new Set();
+
+            // 1. Base word
+            set.add(cleanWord);
+
+            const includeSubstrings = document.getElementById('opt-substrings').checked;
+            const includeTypos = document.getElementById('opt-typos').checked;
+            const includeLeetspeak = document.getElementById('opt-leetspeak').checked;
+            const includeSpacers = document.getElementById('opt-spacers').checked;
+
+            // Substrings / Cuts (Prefixes, Suffixes, Inner Cuts)
+            if (includeSubstrings && cleanWord.length >= 4) {
+                // Drop first letter
+                set.add(cleanWord.substring(1)); // ex: erruba
+                // Drop first 2 letters
+                if (cleanWord.length > 5) set.add(cleanWord.substring(2));
+                // Drop last letter
+                set.add(cleanWord.substring(0, cleanWord.length - 1)); // ex: derrub
+                // Middle cut / tail fragment
+                set.add(cleanWord.substring(cleanWord.length - 4)); // ex: bador
+                set.add(cleanWord.substring(0, 4)); // ex: erru
+            }
+
+            // Typos (Dropped double letters, missing vowels)
+            if (includeTypos) {
+                // Drop double consonants (e.g. derruba -> deruba or derrbar)
+                let noDouble = cleanWord.replace(/([a-z])\1/g, "$1");
+                set.add(noDouble);
+
+                // Drop middle vowel (e.g. derruba -> derrba)
+                if(cleanWord.length > 4) {
+                    let vowelsDropped = cleanWord.replace(/[aeiou]/g, function(m, offset) {
+                        return (offset > 0 && offset < cleanWord.length - 1) ? '' : m;
+                    });
+                    set.add(vowelsDropped);
+                }
+            }
+
+            // Leetspeak
+            if (includeLeetspeak) {
+                let leet = cleanWord
+                    .replace(/a/g, '4')
+                    .replace(/e/g, '3')
+                    .replace(/i/g, '1')
+                    .replace(/o/g, '0')
+                    .replace(/s/g, '5')
+                    .replace(/t/g, '7');
+                set.add(leet);
+
+                // Mixed leet fragment
+                if(cleanWord.length >= 5) {
+                    set.add(cleanWord.substring(0, 4).replace(/a/g, '4').replace(/e/g, '3') + cleanWord.substring(4));
+                }
+            }
+
+            // Spacers / Separators (d.e.r.r.u.b.a, d-e-r-r-u-b-a)
+            if (includeSpacers) {
+                set.add(cleanWord.split('').join('.'));
+                set.add(cleanWord.split('').join('-'));
+                set.add(cleanWord.split('').join(' '));
+            }
+
+            currentFragments = Array.from(set);
+            renderFragmentResults();
+        }
+
+        function renderFragmentResults() {
+            const container = document.getElementById('fragment-results');
+            const countLabel = document.getElementById('fragment-count');
+            container.innerHTML = '';
+
+            countLabel.textContent = `${currentFragments.length} variações`;
+
+            currentFragments.forEach(frag => {
+                const tag = document.createElement('div');
+                tag.className = 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-medium flex items-center space-x-2 transition cursor-pointer group';
+                tag.innerHTML = `
+                    <span class="code-font">${escapeHtml(frag)}</span>
+                    <button onclick="addSingleToGlobal('${escapeHtml(frag)}')" class="text-slate-400 hover:text-emerald-400 transition" title="Adicionar à Blacklist">
+                        <i class="fa-solid fa-plus text-[10px]"></i>
+                    </button>
+                `;
+                container.appendChild(tag);
+            });
+        }
+
+        function setSemanticInput(word) {
+            document.getElementById('semantic-input').value = word;
+            generateSemanticVariations();
+        }
+
+        function quickSemantic(term) {
+            setSemanticInput(term);
+        }
+
+        function generateSemanticVariations() {
+            const query = document.getElementById('semantic-input').value.trim().toLowerCase();
+            if(!query) return;
+
+            // Check dictionary or generate programmatically
+            let results = semanticDictionary[query];
+
+            if (!results) {
+                // Fallback algorithmic generation for unknown terms
+                results = [
+                    { term: `${query} velado`, category: "Eufemismo", risk: "Média" },
+                    { term: `não aceito (${query})`, category: "Rejeição Moral", risk: "Média" },
+                    { term: `desaprovado socialmente`, category: "Julgamento", risk: "Baixa" },
+                    { term: `anti-${query}`, category: "Oposição", risk: "Baixa" },
+                    { term: `comportamento ${query}`, category: "Rotulagem", risk: "Média" }
+                ];
+            }
+
+            currentSemanticResults = results;
+            renderSemanticResults();
+        }
+
+        function renderSemanticResults() {
+            const container = document.getElementById('semantic-results');
+            const countBadge = document.getElementById('semantic-count');
+            container.innerHTML = '';
+
+            countBadge.textContent = `${currentSemanticResults.length} termos`;
+
+            currentSemanticResults.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col justify-between hover:border-slate-700 transition space-y-2';
+                
+                const riskColor = item.risk === 'Alta' ? 'text-rose-400 bg-rose-500/10 border-rose-500/20' : 
+                                 item.risk === 'Média' ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 
+                                 'text-slate-400 bg-slate-800 border-slate-700';
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between">
+                        <span class="font-medium text-sm text-slate-100">${escapeHtml(item.term)}</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full border ${riskColor}">${item.risk} Risk</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-800/60">
+                        <span><i class="fa-solid fa-tag text-[10px] mr-1"></i>${item.category}</span>
+                        <button onclick="addSingleToGlobal('${escapeHtml(item.term)}')" class="text-emerald-400 hover:text-emerald-300 font-medium text-xs flex items-center space-x-1">
+                            <i class="fa-solid fa-plus text-[10px]"></i>
+                            <span>Incluir</span>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function loadSampleText(sampleId) {
+            const input = document.getElementById('sim-input-text');
+            if (sampleId === 1) {
+                input.value = "Esse sujeito é um a.t.a.c.a.n.t.e total! Vai lá e d.e.r.r.u.b.a o canal dele, derrubador de plantão.";
+            } else if (sampleId === 2) {
+                input.value = "Olha que mal elemento, má companhia pra todo mundo... uma verdadeira escoria e não aceito esse tipo de gente.";
+            } else if (sampleId === 3) {
+                input.value = "Ele é um m4u c4r473r, vive de atacar, tacant de merda! derrbar tudo que vê pela frente.";
+            }
+            runCensorshipSimulation();
+        }
+
+        function runCensorshipSimulation() {
+            const text = document.getElementById('sim-input-text').value;
+            const outputContainer = document.getElementById('sim-output-censored');
+            const detectedListContainer = document.getElementById('sim-detected-list');
+            const countLabel = document.getElementById('sim-detected-count');
+
+            if (!text.trim()) {
+                outputContainer.innerHTML = '<span class="text-slate-500 italic">O resultado filtrado aparecerá aqui...</span>';
+                detectedListContainer.innerHTML = '<div class="text-xs text-slate-500 text-center py-4">Nenhuma palavra bloqueada identificada.</div>';
+                countLabel.textContent = '0 detectados';
+                return;
+            }
+
+            let censoredText = text;
+            const detectedTerms = [];
+
+            // Convert set of active blocklist words into list
+            const activeWords = Array.from(globalBlacklist);
+
+            activeWords.forEach(word => {
+                if(!word || word.length < 2) return;
+
+                // Escape special regex chars for spaced/dot variations
+                const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                
+                // Flexible regex matching dots, dashes or spaces between letters
+                let patternString = escapedWord;
+                
+                // If word is simple letters, allow detection of spaced/dotted versions too
+                if (/^[a-zA-Z0-9]+$/.test(word)) {
+                    patternString = word.split('').map(char => `${char}[\\s\\.\\_-]*`).join('');
+                }
+
+                const regex = new RegExp(`(${patternString})`, 'gi');
+
+                if (regex.test(censoredText)) {
+                    detectedTerms.push(word);
+                    censoredText = censoredText.replace(regex, (match) => {
+                        return `<span class="bg-rose-500/20 text-rose-300 font-semibold px-1 py-0.5 rounded border border-rose-500/40">${'█'.repeat(Math.min(match.length, 8))}</span>`;
+                    });
+                }
+            });
+
+            outputContainer.innerHTML = censoredText || text;
+
+            // Render detected terms list
+            countLabel.textContent = `${detectedTerms.length} detectados`;
+            detectedListContainer.innerHTML = '';
+
+            if (detectedTerms.length === 0) {
+                detectedListContainer.innerHTML = '<div class="text-xs text-emerald-400/80 text-center py-3"><i class="fa-solid fa-circle-check mr-1"></i> Texto limpo! Nenhum termo da Blacklist encontrado.</div>';
+            } else {
+                detectedTerms.forEach(term => {
+                    const row = document.createElement('div');
+                    row.className = 'flex items-center justify-between text-xs bg-slate-800/80 p-2 rounded-lg border border-slate-700/50';
+                    row.innerHTML = `
+                        <span class="text-rose-400 font-medium code-font"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>${escapeHtml(term)}</span>
+                        <span class="text-[10px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded">Detectado</span>
+                    `;
+                    detectedListContainer.appendChild(row);
+                });
+            }
+        }
+
+        async function runAiAnalysis() {
+            const input = document.getElementById('ai-input-text').value.trim();
+            if(!input) {
+                showToast("Por favor, digite um texto para analisar com a IA.");
+                return;
+            }
+
+            const statusBadge = document.getElementById('ai-status-badge');
+            const container = document.getElementById('ai-response-container');
+            const btn = document.getElementById('btn-run-ai');
+            const footer = document.getElementById('ai-action-footer');
+
+            statusBadge.textContent = "Analisando com Gemini...";
+            statusBadge.className = "text-xs font-semibold text-amber-400 animate-pulse";
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-8 space-y-3">
+                    <div class="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span class="text-xs text-slate-400">Escaneando intenção, julgamentos moralistas e extraindo palavras-chave...</span>
+                </div>
+            `;
+
+            const systemPrompt = "Você é um assistente especialista em moderação de redes sociais e combate a ataques moralistas e haters. Analise o comentário enviado e retorne um relatório no formato JSON com as seguintes propriedades: ' moralismLevel' (Baixo, Médio, Alto), 'explanation' (resumo curto de 2 frases explicando se há julgamento moralista ou ataque de hater), e 'extractedKeywords' (lista de array com até 6 palavras ou fragmentos tóxicos/velados encontrados para bloqueio).";
+
+            const apiKey = ""; // API key injetada automaticamente em runtime
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: `Analise este texto: "${input}"` }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            moralismLevel: { type: "STRING" },
+                            explanation: { type: "STRING" },
+                            extractedKeywords: {
+                                type: "ARRAY",
+                                items: { type: "STRING" }
+                            }
+                        },
+                        required: ["moralismLevel", "explanation", "extractedKeywords"]
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (jsonText) {
+                    const data = JSON.parse(jsonText);
+                    aiExtractedKeywords = data.extractedKeywords || [];
+
+                    statusBadge.textContent = "Concluído";
+                    statusBadge.className = "text-xs font-semibold text-emerald-400";
+
+                    container.innerHTML = `
+                        <div class="space-y-3 text-xs">
+                            <div class="flex items-center justify-between bg-slate-800/80 p-2.5 rounded-lg">
+                                <span class="text-slate-400">Nível de Moralismo/Hate:</span>
+                                <span class="font-bold px-2 py-0.5 rounded ${data.moralismLevel === 'Alto' ? 'bg-rose-500/20 text-rose-300' : 'bg-amber-500/20 text-amber-300'}">${data.moralismLevel}</span>
+                            </div>
+
+                            <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700/50 text-slate-300 leading-relaxed">
+                                <span class="font-semibold text-emerald-400 block mb-1">Diagnóstico:</span>
+                                ${escapeHtml(data.explanation)}
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <span class="text-slate-400 font-semibold block">Palavras/Fragmentos sugeridos para Bloqueio:</span>
+                                <div class="flex flex-wrap gap-1.5">
+                                    ${aiExtractedKeywords.map(kw => `<span class="bg-slate-800 text-slate-200 border border-slate-700 px-2 py-1 rounded text-[11px] code-font">${escapeHtml(kw)}</span>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    footer.classList.remove('hidden');
+                } else {
+                    throw new Error("Resposta inválida da API");
+                }
+            } catch (err) {
+                console.error(err);
+                statusBadge.textContent = "Erro na análise";
+                statusBadge.className = "text-xs font-semibold text-rose-400";
+
+                container.innerHTML = `
+                    <div class="p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg text-xs text-rose-300 space-y-1">
+                        <span class="font-bold">Não foi possível conectar com a IA no momento.</span>
+                        <p>Foi utilizado o motor local padrão para processamento.</p>
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+            }
+        }
+
+        function importAiKeywordsToBlacklist() {
+            if (aiExtractedKeywords.length > 0) {
+                aiExtractedKeywords.forEach(kw => globalBlacklist.add(kw.toLowerCase()));
+                renderGlobalBlacklist();
+                runCensorshipSimulation();
+                showToast(`${aiExtractedKeywords.length} palavras importadas para a Blacklist!`);
+            }
+        }
+
+        function renderGlobalBlacklist() {
+            const container = document.getElementById('global-blacklist-tags');
+            container.innerHTML = '';
+
+            if (globalBlacklist.size === 0) {
+                container.innerHTML = '<span class="text-xs text-slate-500 italic">Nenhum termo na blacklist global no momento.</span>';
+                return;
+            }
+
+            globalBlacklist.forEach(word => {
+                const tag = document.createElement('span');
+                tag.className = 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 px-2.5 py-1 rounded-lg text-xs flex items-center space-x-1.5 code-font';
+                tag.innerHTML = `
+                    <span>${escapeHtml(word)}</span>
+                    <button onclick="removeSingleFromGlobal('${escapeHtml(word)}')" class="text-emerald-500 hover:text-rose-400 transition ml-1">
+                        <i class="fa-solid fa-xmark text-[10px]"></i>
+                    </button>
+                `;
+                container.appendChild(tag);
+            });
+        }
+
+        function addSingleToGlobal(word) {
+            globalBlacklist.add(word.toLowerCase());
+            renderGlobalBlacklist();
+            runCensorshipSimulation();
+            showToast(`"${word}" adicionado à Blacklist Global!`);
+        }
+
+        function removeSingleFromGlobal(word) {
+            globalBlacklist.delete(word);
+            renderGlobalBlacklist();
+            runCensorshipSimulation();
+        }
+
+        function addCurrentFragmentsToGlobalList() {
+            if(currentFragments.length === 0) return;
+            currentFragments.forEach(f => globalBlacklist.add(f.toLowerCase()));
+            renderGlobalBlacklist();
+            runCensorshipSimulation();
+            showToast(`${currentFragments.length} fragmentos adicionados à Blacklist!`);
+        }
+
+        function addAllSemanticToGlobalList() {
+            if(currentSemanticResults.length === 0) return;
+            currentSemanticResults.forEach(item => globalBlacklist.add(item.term.toLowerCase()));
+            renderGlobalBlacklist();
+            runCensorshipSimulation();
+            showToast(`Termos semânticos adicionados à Blacklist!`);
+        }
+
+        function clearGlobalList() {
+            globalBlacklist.clear();
+            renderGlobalBlacklist();
+            runCensorshipSimulation();
+            showToast("Blacklist limpa com sucesso!");
+        }
+
+        function copyFormatted(format) {
+            let textToCopy = "";
+            if (format === 'comma') {
+                textToCopy = currentFragments.join(', ');
+            } else if (format === 'newline') {
+                textToCopy = currentFragments.join('\n');
+            } else if (format === 'regex') {
+                textToCopy = `(${currentFragments.map(f => f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`;
+            }
+
+            copyToClipboard(textToCopy);
+            showToast("Copiado no formato selecionado!");
+        }
+
+        function copyCurrentBlocklist() {
+            const list = Array.from(globalBlacklist);
+            if (list.length === 0) {
+                showToast("Blacklist está vazia.");
+                return;
+            }
+            const text = list.join(', ');
+            copyToClipboard(text);
+            showToast("Lista completa copiada para área de transferência!");
+        }
+
+        function copyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
