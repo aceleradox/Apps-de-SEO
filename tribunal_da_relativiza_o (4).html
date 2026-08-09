@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tribunal da Relativização: O Caso Hiro Saints</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #e2e8f0;
+        }
+        .font-cinzel {
+            font-family: 'Cinzel', serif;
+        }
+        .card-glow:hover {
+            box-shadow: 0 0 20px rgba(217, 119, 6, 0.35);
+        }
+        .card-selected {
+            border-color: #f59e0b !important;
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.7) !important;
+            transform: translateY(-8px);
+        }
+        .card-recommended {
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.8) !important;
+            animation: pulse 1.5s infinite;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 3px;
+        }
+        .power-plen-glow {
+            box-shadow: 0 0 30px rgba(234, 179, 8, 0.9), inset 0 0 15px rgba(245, 158, 11, 0.6);
+            animation: goldenGlow 1.2s infinite alternate;
+        }
+        @keyframes goldenGlow {
+            from { filter: drop-shadow(0 0 10px #f59e0b); }
+            to { filter: drop-shadow(0 0 25px #ef4444); }
+        }
+        @keyframes shockwave {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        .animate-shockwave {
+            animation: shockwave 0.8s ease-out forwards;
+        }
+        .timer-warning {
+            animation: pulse-red 0.6s infinite alternate;
+            color: #ef4444 !important;
+            border-color: #ef4444 !important;
+        }
+        @keyframes pulse-red {
+            from { transform: scale(1); box-shadow: 0 0 5px rgba(239, 68, 68, 0.4); }
+            to { transform: scale(1.08); box-shadow: 0 0 15px rgba(239, 68, 68, 0.9); }
+        }
+    </style>
+
+    <!-- FIREBASE MODULE INTEGRATION FOR CLOUD SAVES -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'tribunal-relativizacao';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "demo", authDomain: "demo", projectId: "demo" };
+
+        let db = null;
+        let auth = null;
+        let user = null;
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            const initAuth = async () => {
+                try {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        const cred = await signInWithCustomToken(auth, __initial_auth_token);
+                        user = cred.user;
+                    } else {
+                        const cred = await signInAnonymously(auth);
+                        user = cred.user;
+                    }
+                } catch(e) {
+                    console.log("Firebase Auth offline mode active.", e);
+                }
+            };
+            initAuth();
+        } catch(e) {
+            console.log("Firebase initialized in fallback state.");
+        }
+
+        // Global save/load helpers
+        window.saveGameToCloud = async function(gameState) {
+            if (!db || !auth || !auth.currentUser) {
+                return { success: false, msg: "Auth não pronto. Usando memória local." };
+            }
+            try {
+                const uid = auth.currentUser.uid;
+                const saveRef = doc(db, 'artifacts', appId, 'users', uid, 'saves', 'tribunal_save');
+                await setDoc(saveRef, {
+                    ...gameState,
+                    timestamp: new Date().toISOString()
+                });
+                return { success: true, msg: "Jogo salvo com sucesso na nuvem!" };
+            } catch(e) {
+                console.error("Erro ao salvar:", e);
+                return { success: false, msg: "Falha ao acessar nuvem." };
+            }
+        };
+
+        window.loadGameFromCloud = async function() {
+            if (!db || !auth || !auth.currentUser) {
+                return null;
+            }
+            try {
+                const uid = auth.currentUser.uid;
+                const saveRef = doc(db, 'artifacts', appId, 'users', uid, 'saves', 'tribunal_save');
+                const docSnap = await getDoc(saveRef);
+                if (docSnap.exists()) {
+                    return docSnap.data();
+                }
+                return null;
+            } catch(e) {
+                console.error("Erro ao carregar:", e);
+                return null;
+            }
+        };
+    </script>
+</head>
+<body class="h-screen flex flex-col justify-between overflow-hidden bg-slate-950 select-none">
+
+    <!-- HEADER DA SESSÃO -->
+    <header class="bg-slate-900 border-b border-amber-900/40 px-4 py-2 flex justify-between items-center z-10 shadow-lg shrink-0">
+        <div class="flex items-center gap-2">
+            <button onclick="openMenuModal()" class="w-9 h-9 rounded-xl bg-amber-600/20 border border-amber-500/50 flex items-center justify-center text-amber-500 font-bold text-lg hover:bg-amber-600/40 transition">
+                ⚖️
+            </button>
+            <div>
+                <h1 class="font-cinzel text-sm font-bold text-amber-400 tracking-wider">TRIBUNAL DA RELATIVIZAÇÃO</h1>
+                <p class="text-[10px] text-slate-400">Réu: <span class="text-amber-200 font-semibold">Hiro Saints</span> | Acusador: <span class="text-red-400 font-semibold">Falcos</span> | Dificuldade: <span id="diff-badge" class="text-amber-400 font-bold">Normal</span></p>
+            </div>
+        </div>
+
+        <!-- RELATIVIZATION GAUGE & POWER PLEN BAR & TIMER -->
+        <div class="w-1/2 max-w-lg flex items-center gap-3">
+            <!-- TIMER DE DEBATE EM TEMPO REAL -->
+            <div id="timer-box" class="bg-slate-950 px-3 py-1.5 rounded-xl border border-amber-500/50 flex flex-col items-center justify-center shrink-0 min-w-[75px] transition-all">
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">TEMPO</span>
+                <span id="timer-display" class="font-mono text-base font-black text-amber-400 leading-none">30s</span>
+            </div>
+
+            <!-- Gauge Progress Bar -->
+            <div class="flex-1 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+                <div class="flex justify-between text-[10px] font-semibold mb-0.5">
+                    <span class="text-red-400 flex items-center gap-1">🔴 Condenação</span>
+                    <span id="gauge-percent" class="text-amber-400 font-bold">20%</span>
+                    <span class="text-emerald-400 flex items-center gap-1">🟢 Relativizado</span>
+                </div>
+                <div class="w-full bg-slate-800 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                    <div id="gauge-bar" class="bg-gradient-to-r from-red-600 via-amber-500 to-emerald-500 h-full rounded-full transition-all duration-700" style="width: 20%;"></div>
+                </div>
+            </div>
+
+            <!-- Power Plen (Barra de Lacração / Super Debate) -->
+            <div class="bg-slate-950 px-2 py-1 rounded-lg border border-amber-900/40 flex items-center gap-1.5 shrink-0">
+                <span class="text-[9px] font-bold text-amber-400 uppercase tracking-widest">🔥 POWER</span>
+                <div class="w-16 bg-slate-800 h-2 rounded-full overflow-hidden p-0.5">
+                    <div id="power-plen-bar" class="bg-gradient-to-r from-amber-500 to-red-500 h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
+                </div>
+                <span id="power-plen-percent" class="text-[9px] font-mono font-bold text-amber-300">0%</span>
+            </div>
+        </div>
+
+        <!-- STAGE & CONTROLS INDICATOR -->
+        <div class="flex items-center gap-2">
+            <button onclick="toggleSound()" id="sound-btn" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs px-2 py-1 rounded-lg flex items-center gap-1 transition">
+                <span>🔊</span> <span id="sound-status">ON</span>
+            </button>
+            <button onclick="saveGamePrompt()" class="bg-amber-950/80 hover:bg-amber-900 border border-amber-700/60 text-amber-300 text-xs px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1 transition">
+                <span>💾</span> Salvar
+            </button>
+            <div class="text-right border-l border-slate-800 pl-2">
+                <div class="text-[9px] uppercase tracking-widest text-slate-400 font-semibold">Fase Atual</div>
+                <div id="phase-title" class="font-cinzel text-amber-400 font-bold text-xs">Fase 1: Sobrevivência</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- COURTROOM BENCH (PERSONAGENS E COMBATE) -->
+    <main class="flex-1 grid grid-cols-12 gap-3 p-3 overflow-hidden relative min-h-0">
+        
+        <!-- PROSECUTION SIDE (FALCOS) -->
+        <section class="col-span-3 bg-slate-900/60 rounded-2xl border border-red-900/30 p-3 flex flex-col items-center justify-between backdrop-blur-sm overflow-hidden">
+            <div class="text-center w-full">
+                <span class="bg-red-950/80 text-red-400 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border border-red-800/50">Acusação Dogmática</span>
+                <div id="falcos-avatar" class="w-14 h-14 mx-auto my-1.5 rounded-full bg-gradient-to-b from-red-900 to-slate-950 border-2 border-red-500 flex items-center justify-center text-3xl shadow-lg shadow-red-950/50 transition-all duration-300">
+                    🦅
+                </div>
+                <h3 class="font-cinzel font-bold text-red-300 text-sm">Falcos</h3>
+                <p class="text-[10px] text-red-400/80 italic line-clamp-1">"A Lei é absoluta. A infração exige punição!"</p>
+            </div>
+
+            <!-- ACUSAÇÃO ATIVA DE FALCOS -->
+            <div id="falcos-card-slot" class="w-full bg-red-950/30 border border-red-800/40 rounded-xl p-2.5 my-1 text-xs">
+                <div class="font-bold text-red-400 uppercase tracking-wider mb-1 flex items-center justify-between text-[10px]">
+                    <span>Tese do Crime</span>
+                    <span id="falcos-power" class="bg-red-600 text-white px-1.5 py-0.5 rounded text-[9px]">Ataque: 40 pts</span>
+                </div>
+                <h4 id="falcos-charge-title" class="font-bold text-slate-200 text-xs mb-0.5">Dano ao Patrimônio Estatal</h4>
+                <p id="falcos-charge-desc" class="text-slate-300 text-[10px] leading-tight line-clamp-3">"Hiro Saints destruiu os portões do distrito para extrair suprimentos. Um crime direto!"</p>
+            </div>
+
+            <div class="w-full text-center">
+                <span class="text-[9px] text-slate-500 uppercase tracking-wider">Réu sob Julgamento</span>
+                <div class="flex items-center gap-2 justify-center bg-slate-950/80 p-1.5 rounded-lg border border-slate-800 mt-1">
+                    <span class="text-base">🕊️</span>
+                    <div class="text-left">
+                        <div class="font-bold text-xs text-slate-200">Hiro Saints</div>
+                        <div class="text-[9px] text-slate-400">Status: Acusado de Infração</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CENTER COURTROOM DRAMA & DIALOGUE LOG -->
+        <section class="col-span-6 flex flex-col justify-between bg-slate-950/80 rounded-2xl border border-slate-800 p-3 relative overflow-hidden min-h-0">
+            <!-- BACKGROUND SYMBOL -->
+            <div class="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+                <span class="text-[140px] font-cinzel text-amber-500">⚖</span>
+            </div>
+
+            <!-- DIALOGUE BOX -->
+            <div id="dialogue-box" class="flex-1 overflow-y-auto custom-scrollbar pr-1.5 space-y-2 relative z-10 text-xs">
+                <!-- Dynamic dialogue entries appended here -->
+            </div>
+
+            <!-- ACTION CONTROLS & SPECIAL POWERS -->
+            <div class="mt-2 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-1.5 relative z-10 shrink-0">
+                <div class="flex gap-1.5">
+                    <button id="btn-behavior-advice" onclick="triggerSimonAdvice()" class="bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-700/50 text-indigo-200 text-[11px] px-2 py-1 rounded-lg flex items-center gap-1 transition">
+                        <span>💡</span>
+                        <span>Aparte de <strong>Simon</strong></span>
+                    </button>
+
+                    <!-- PODER ESPECIAL DE FORCOUT -->
+            <button id="btn-special-power" onclick="useSpecialPower()" class="bg-purple-950/80 hover:bg-purple-900 border border-purple-700/50 text-purple-200 text-[11px] px-2 py-1 rounded-lg flex items-center gap-1 transition">
+                <span>👁️</span>
+                <span>Análise <strong>Forcout</strong> <span id="special-power-badge" class="bg-purple-800 text-white text-[9px] px-1 rounded">1x</span></span>
+            </button>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+            <!-- BOTÃO DO POWER PLEN / MITAGEM -->
+            <button id="btn-power-plen" onclick="triggerSuperDebate()" disabled class="bg-slate-800 border border-slate-700 opacity-40 text-slate-400 text-[11px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 transition">
+                <span>🔥</span>
+                <span>MITAGEM</span>
+            </button>
+
+            <button id="btn-reset-turn" onclick="resetSelectedCards()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] px-2 py-1 rounded-lg transition">
+                Limpar
+            </button>
+            
+            <button id="btn-play-argument" onclick="submitArgument()" disabled class="bg-amber-600 hover:bg-amber-500 disabled:opacity-40 disabled:hover:bg-amber-600 text-slate-950 font-bold text-xs px-3 py-1 rounded-lg shadow-lg transition flex items-center gap-1">
+                <span>Refutar Acusação</span>
+                <span id="selected-power-sum" class="bg-amber-950 text-amber-300 px-1 py-0.5 rounded text-[9px] font-mono">0 pts</span>
+            </button>
+        </div>
+    </div>
+</section>
+
+        <!-- DEFENSE TEAM SIDE (MIKE FORCOUT & SIMON BEHAVOIR) -->
+        <section class="col-span-3 bg-slate-900/60 rounded-2xl border border-amber-900/30 p-3 flex flex-col justify-between backdrop-blur-sm overflow-hidden">
+            <div class="text-center w-full">
+                <span class="bg-amber-950/80 text-amber-400 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border border-amber-800/50">Bancada de Relativização</span>
+            </div>
+
+            <!-- JURISTA 1: MIKE FORCOUT -->
+            <div class="my-1.5 bg-slate-950/80 p-2 rounded-xl border border-amber-800/30 flex items-center gap-2">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-b from-amber-700 to-slate-900 border-2 border-amber-400 flex items-center justify-center text-lg shrink-0 shadow-md">
+                    🧐
+                </div>
+                <div>
+                    <h4 class="font-cinzel font-bold text-amber-300 text-xs">Mike Forcout</h4>
+                    <p class="text-[9px] text-amber-200/70 italic line-clamp-1">"Desconstrua o poder do Estado."</p>
+                </div>
+            </div>
+
+            <!-- JURISTA 2: SIMON BEHAVOIR -->
+            <div class="my-1.5 bg-slate-950/80 p-2 rounded-xl border border-indigo-800/30 flex items-center gap-2">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-b from-indigo-700 to-slate-900 border-2 border-indigo-400 flex items-center justify-center text-lg shrink-0 shadow-md">
+                    👩‍⚖️
+                </div>
+                <div>
+                    <h4 class="font-cinzel font-bold text-indigo-300 text-xs">Simon Behavoir</h4>
+                    <p class="text-[9px] text-indigo-200/70 italic line-clamp-1">"A situação vivida rege a moral."</p>
+                </div>
+            </div>
+
+            <!-- DICAS DA BANCADA -->
+            <div class="bg-amber-950/20 border border-amber-800/30 rounded-xl p-2 text-[10px] text-amber-200/80">
+                <div class="font-semibold text-amber-400 mb-0.5 flex items-center gap-1">
+                    <span>📜</span> Dica Tática:
+                </div>
+                <p id="tactical-tip" class="line-clamp-3">Selecione cartas cujos fundamentos desconstruam a acusação de Falcos antes que o tempo esgote.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- PLAYER DECK / CARDS HAND -->
+    <footer class="bg-slate-900/90 border-t border-slate-800 p-2.5 z-20 shrink-0">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex justify-between items-center mb-1">
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                        <span>🎴</span> Baralho de Refutação (Selecione até 2 - Cuidado com Armadilhas!)
+                    </span>
+                    <button onclick="reshuffleHand()" class="bg-amber-950/60 hover:bg-amber-900 border border-amber-700/50 text-amber-300 text-[10px] px-2 py-0.5 rounded-md flex items-center gap-1 transition font-semibold">
+                        🎲 Novas Cartas Aleatórias
+                    </button>
+                </div>
+                <span id="cards-selected-count" class="text-xs text-amber-400 font-semibold">0 / 2 Selecionadas</span>
+            </div>
+
+            <!-- CARDS CONTAINER (AGORA COM 6 CARTAS EXPANDIDAS E DINÂMICAS) -->
+            <div id="cards-container" class="grid grid-cols-6 gap-2">
+                <!-- Cards will be dynamically injected here -->
+            </div>
+        </div>
+    </footer>
+
+    <!-- MENU OVERLAY / MODAL DE INÍCIO -->
+    <div id="modal-menu" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md flex items-center justify-center z-50">
+        <div class="bg-slate-900 border-2 border-amber-500/60 rounded-3xl max-w-md w-full p-6 text-center shadow-2xl relative">
+            <div class="text-5xl mb-2">⚖️</div>
+            <h1 class="font-cinzel text-2xl font-bold text-amber-400 mb-1">TRIBUNAL DA RELATIVIZAÇÃO</h1>
+            <p class="text-xs text-slate-400 mb-6">O Processo de Hiro Saints | Defesa de Forcout & Behavoir</p>
+
+            <div class="space-y-3">
+                <button onclick="startNewGame()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition font-cinzel text-sm shadow-lg">
+                    🎮 Novo Jogo
+                </button>
+                <button onclick="loadSavedGame()" class="w-full bg-slate-800 hover:bg-slate-700 text-amber-300 font-semibold py-2.5 rounded-xl border border-amber-900/40 transition text-xs">
+                    📂 Carregar Jogo Salvo (Nuvem)
+                </button>
+            </div>
+
+            <!-- DIFICULDADE SELECTION -->
+            <div class="mt-6 pt-4 border-t border-slate-800">
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Dificuldade da Acusação</label>
+                <div class="grid grid-cols-3 gap-2 text-xs font-semibold">
+                    <button onclick="setDifficulty('easy')" id="btn-diff-easy" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 py-1.5 rounded-lg border border-slate-700">Fácil</button>
+                    <button onclick="setDifficulty('normal')" id="btn-diff-normal" class="bg-amber-900/60 text-amber-300 py-1.5 rounded-lg border border-amber-500">Normal</button>
+                    <button onclick="setDifficulty('hard')" id="btn-diff-hard" class="bg-slate-800 hover:bg-slate-700 text-red-400 py-1.5 rounded-lg border border-slate-700">Difícil</button>
+                </div>
+            </div>
+
+            <button onclick="closeMenuModal()" id="btn-close-menu" class="mt-5 text-xs text-slate-500 hover:text-slate-300 underline hidden">Voltar ao Jogo</button>
+        </div>
+    </div>
+
+    <!-- MODAL DE TRANSIÇÃO DE FASE -->
+    <div id="modal-phase" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-50 hidden">
+        <div class="bg-slate-900 border-2 border-amber-500/60 rounded-2xl max-w-lg w-full p-6 text-center shadow-2xl relative">
+            <div id="modal-icon" class="text-6xl mb-3">🏛️</div>
+            <h2 id="modal-title" class="font-cinzel text-2xl font-bold text-amber-400 mb-2">Fase Concluída!</h2>
+            <p id="modal-desc" class="text-sm text-slate-300 mb-6 leading-relaxed">A argumentação de Mike Forcout e Simon Behavoir conseguiu desconstruir a dogmática da acusação.</p>
+            <button id="modal-btn" onclick="nextPhase()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl transition font-cinzel">
+                Avançar para a Próxima Fase
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL DE GAME OVER (CONDENAÇÃO ABSOLUTA) -->
+    <div id="modal-gameover" class="fixed inset-0 bg-red-950/95 backdrop-blur-md flex items-center justify-center z-50 hidden">
+        <div class="bg-slate-900 border-2 border-red-600 rounded-3xl max-w-lg w-full p-6 text-center shadow-2xl relative animate-bounce-short">
+            <div class="text-6xl mb-3">🦅💥</div>
+            <h2 class="font-cinzel text-3xl font-black text-red-500 mb-2">GAME OVER!</h2>
+            <h3 class="font-cinzel text-lg font-bold text-slate-200 mb-3">Hiro Saints foi Condenado!</h3>
+            <p class="text-xs text-slate-300 mb-6 leading-relaxed bg-slate-950 p-3 rounded-xl border border-red-900/50 italic">
+                "A relativização falhou perante o dogma! A acusação de Falcos esmagou as teses defensivas. Hiro Saints cumprirá pena máxima sem apelação."
+            </p>
+            <button onclick="startNewGame()" class="bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-bold px-8 py-3 rounded-xl shadow-xl transition font-cinzel uppercase tracking-wider text-sm">
+                🔄 Tentar Julgamento Novamente
+            </button>
+        </div>
+    </div>
+
+    <!-- CUTSCENE DE SUPER DEBATE / MITAGEM JURÍDICA -->
+    <div id="modal-super-debate" class="fixed inset-0 bg-amber-950/90 backdrop-blur-lg flex items-center justify-center z-50 hidden">
+        <div class="text-center p-8 max-w-2xl relative">
+            <div class="w-28 h-28 mx-auto mb-4 rounded-full bg-amber-500/20 border-4 border-amber-400 flex items-center justify-center text-6xl power-plen-glow">
+                ⚡
+            </div>
+            <span class="bg-red-600 text-white font-bold text-xs uppercase px-4 py-1 rounded-full tracking-widest animate-pulse">ULTIMATE MITAGEM JURÍDICA</span>
+            <h2 class="font-cinzel text-3xl font-black text-amber-300 my-3">LACRAÇÃO SÓCIO-FILOSÓFICA DE FORCOUT & BEHAVOIR</h2>
+            
+            <div class="bg-slate-950/90 border-2 border-amber-500/80 rounded-2xl p-4 my-4 text-left shadow-2xl">
+                <p id="super-debate-quote" class="font-serif italic text-base text-amber-100 leading-relaxed">
+                    "A sua norma estéril não passa da cicatriz congelada de um poder caduco! Não há crime onde houve apenas o dever ético da preservação humana!"
+                </p>
+            </div>
+
+            <div class="text-amber-400 font-bold text-lg mb-6">+100 PTS DE RELATIVIZAÇÃO ABSOLUTA</div>
+
+            <button onclick="closeSuperDebateModal()" class="bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-slate-950 font-black text-sm px-8 py-3 rounded-2xl shadow-2xl transition uppercase tracking-wider font-cinzel">
+                Esmagar a Acusação de Falcos!
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // WEBAUDIO SYNTHESIZER FOR SOUND EFFECTS
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playGavel() {
+                if (!this.enabled) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.3);
+                gain.gain.setValueAtTime(1, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            }
+
+            playCardClick() {
+                if (!this.enabled) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+
+            playSuccess() {
+                if (!this.enabled) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                [440, 554.37, 659.25, 880].forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.25);
+                });
+            }
+
+            playError() {
+                if (!this.enabled) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.25);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.25);
+            }
+
+            playTick() {
+                if (!this.enabled) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(900, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.03);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.03);
+            }
+
+            playSuperDebate() {
+                if (!this.enabled) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.8);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.9);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.9);
+            }
+        }
+
+        const audio = new SoundEngine();
+
+        // GAME STATE
+        let currentPhaseIndex = 0;
+        let selectedCards = [];
+        let displayedHandCards = [];
+        let relativizationProgress = 20; // Starts at 20%
+        let powerPlenCharge = 0; // 0 to 100
+        let adviceUsedInPhase = false;
+        let specialPowerUsesLeft = 1; // 1 uso ÚNICO para TODO o julgamento
+        let currentDifficulty = 'normal'; // easy, normal, hard
+        let difficultyMultipliers = { easy: 1.0, normal: 1.25, hard: 1.6 };
+        let timerDurations = { easy: 18, normal: 12, hard: 8 };
+
+        // POOL GLOBAL DE CARTAS ALEATÓRIAS / BÔNUS
+        const extraRandomCardsPool = [
+            { id: 'rnd_1', title: 'Aforismo Hermenêutico', category: 'Filosofia Crítica', power: 20, penalty: 0, desc: 'Não há fatos absolutos, apenas interpretações do poder instituidor.', quote: 'As verdades dogmáticas são ilusões congeladas.' },
+            { id: 'rnd_2', title: 'Apelo Sentimental Vazio', category: '⚠️ FALÁCIA INFORMAL', power: -10, penalty: 10, desc: 'Tenta comover o juizado sem fundamento jurídico ou ético sólido.', quote: 'Olhem para o olhar desesperado do réu!' },
+            { id: 'rnd_3', title: 'Isonomia Material', category: 'Princípio Garantista', power: 22, penalty: 0, desc: 'Tratar desiguais na justa medida de suas desigualdades sociais.', quote: 'A igualdade cega perpetua a pior das injustiças.' },
+            { id: 'rnd_4', title: 'Dogmatismo Cego', category: '⚠️ ARMADILHA DOGMÁTICA', power: -20, penalty: 20, desc: 'Admite que a lei deve ser cumprida friamente, mesmo esmagando vidas.', quote: 'Dura lex, sed lex, custe o que custar ao povo.' },
+            { id: 'rnd_5', title: 'Precedente Humanitário', category: 'Jurisprudência', power: 25, penalty: 0, desc: 'Decisão histórica que priorizou a vida sobre a burocracia.', quote: 'O direito evolui na proporção das dores sociais.' },
+            { id: 'rnd_6', title: 'Procrastinação Processual', category: '⚠️ TESE FRACA', power: -8, penalty: 8, desc: 'Pede aditamento do processo por pura falta de carimbo oficial.', quote: 'Exigimos suspensão por falha no protocolo.' },
+            { id: 'rnd_7', title: 'Estado de Exceção Ético', category: 'Filosofia Política', power: 27, penalty: 0, desc: 'Quando o Estado colapsa, a norma perde sua validade moral.', quote: 'Não se cobra ordem legal em meio ao caos da omissão.' }
+        ];
+
+        // TIMER LOGIC
+        let turnTimer = null;
+        let timeLeft = 18;
+
+        function startDebateTimer() {
+            clearInterval(turnTimer);
+            timeLeft = timerDurations[currentDifficulty] || 18;
+            updateTimerDisplay();
+
+            turnTimer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+
+                if (timeLeft <= 5 && timeLeft > 0) {
+                    audio.playTick();
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(turnTimer);
+                    handleTimeOut();
+                }
+            }, 1000);
+        }
+
+        function stopDebateTimer() {
+            clearInterval(turnTimer);
+        }
+
+        function updateTimerDisplay() {
+            const display = document.getElementById('timer-display');
+            const box = document.getElementById('timer-box');
+            if (!display || !box) return;
+
+            display.innerText = `${timeLeft}s`;
+
+            if (timeLeft <= 5) {
+                box.classList.add('timer-warning');
+            } else {
+                box.classList.remove('timer-warning');
+            }
+        }
+
+        function handleTimeOut() {
+            audio.playError();
+            const penalty = currentDifficulty === 'hard' ? 20 : (currentDifficulty === 'normal' ? 15 : 10);
+            relativizationProgress = Math.max(0, relativizationProgress - penalty);
+            updateGauge();
+
+            appendDialogue(`⌛ <strong>Tempo Esgotado!</strong> Falcos aproveitou o seu silêncio para impressionar os juízes (-${penalty}% de Relativização)!`);
+            
+            if (checkGameOver()) return;
+
+            resetSelectedCards();
+            startDebateTimer(); // Restart timer for next attempt
+        }
+
+        function checkGameOver() {
+            if (relativizationProgress <= 0) {
+                stopDebateTimer();
+                audio.playError();
+                document.getElementById('modal-gameover').classList.remove('hidden');
+                return true;
+            }
+            return false;
+        }
+
+        // DATA DE FASES E CARTAS (COM 6 CARTAS EXPANDIDAS E ARMADILHAS DE DANO)
+        const gamePhases = [
+            {
+                phase: 1,
+                title: "Fase 1: Imperativo de Sobrevivência",
+                chargeTitle: "Dano ao Patrimônio Estatal",
+                chargeDesc: "Falcos: 'Hiro Saints violou os lacres do depósito público para extrair suprimentos. Crime direto e objetivo!'",
+                falcosPower: 35,
+                targetPower: 40,
+                falcosQuote: "Não importa a justificativa social! A propriedade do Estado foi violada. O artigo de tutela patrimonial é objetivo!",
+                simonAdvice: "Falcos foca na propriedade. Refute com Estado de Necessidade e Ética da Situação. Cuidado com concessões dogmáticas!",
+                mikeQuote: "Falcos tenta transformar a necessidade biológica em rebeldia para justificar a punição. Desconstrua essa ilusão!",
+                superDebateQuote: "A propriedade estéril do Estado não tem vida nem alma! Sacrificar seres humanos em nome de portões de ferro é a maior perversão jurídica possível!",
+                bestComboIds: ['p1_1', 'p1_4'],
+                cards: [
+                    {
+                        id: 'p1_1',
+                        title: 'Estado de Necessidade (Art. 24 CP)',
+                        category: 'Excludente Perfeita',
+                        power: 25,
+                        penalty: 0,
+                        desc: 'Refuta o dano provando perigo atual à vida alheia.',
+                        quote: 'Não há crime quando o bem resguardado é a vida.'
+                    },
+                    {
+                        id: 'p1_2',
+                        title: 'Insignificância Material',
+                        category: 'Teoria da Tipicidade',
+                        power: 18,
+                        penalty: 0,
+                        desc: 'A lesão ao patrimônio público foi irrisória perante a tragédia.',
+                        quote: 'O Direito Penal não cuida de bagatelas estatais.'
+                    },
+                    {
+                        id: 'p1_3',
+                        title: 'Confissão de Dano Patrimonial',
+                        category: '⚠️ ARMADILHA DOGMÁTICA',
+                        power: -15,
+                        penalty: 15,
+                        desc: 'Admite o dano sem justificativa válida, fortalecendo a acusação!',
+                        quote: 'O patrimônio do Estado é sacrossanto e inviolável.'
+                    },
+                    {
+                        id: 'p1_4',
+                        title: 'Ética da Situação Existencial',
+                        category: 'Filosofia (Simon)',
+                        power: 22,
+                        penalty: 0,
+                        desc: 'Refuta a regra fria demonstrando as opções reais de sobrevivência.',
+                        quote: 'A moral não se curva a regulamentos frios.'
+                    },
+                    {
+                        id: 'p1_5',
+                        title: 'Submissão ao Código Formal',
+                        category: '⚠️ TESE FRACA',
+                        power: -10,
+                        penalty: 10,
+                        desc: 'Pede desculpas pela infração, dando razão total ao Falcos.',
+                        quote: 'Pedimos leniência pela infração cometida.'
+                    },
+                    {
+                        id: 'p1_6',
+                        title: 'Função Social da Propriedade',
+                        category: 'Direito Constitucional',
+                        power: 15,
+                        penalty: 0,
+                        desc: 'A propriedade estatal perde a tutela se nega socorro público.',
+                        quote: 'A função social precede a posse estatal.'
+                    }
+                ]
+            },
+            {
+                phase: 2,
+                title: "Fase 2: Ausência de Elemento Subjetivo (Dolo)",
+                chargeTitle: "Sabotagem de Infraestrutura Crítica",
+                chargeDesc: "Falcos: 'Hiro desligou a grade de energia do setor administrativo para evitar a captura de refugiados urbanos.'",
+                falcosPower: 45,
+                targetPower: 50,
+                falcosQuote: "Houve dolo direto! Hiro sabia exatamente os danos que causaria à administração ao apertar aquele interruptor!",
+                simonAdvice: "Falcos alega Dolo e Sabotagem. Refute com Inexigibilidade de Conduta Diversa ou Coerção Moral Irresistível!",
+                mikeQuote: "O conceito de 'sabotagem' é uma rotulagem criada pelo poder para criminalizar a solidariedade.",
+                superDebateQuote: "Você chama de sabotagem o que a história chamará de heroismo existencial! Ninguém é obrigado a se tornar cúmplice da opressão estatal!",
+                bestComboIds: ['p2_1', 'p2_3'],
+                cards: [
+                    {
+                        id: 'p2_1',
+                        title: 'Inexigibilidade de Conduta',
+                        category: 'Culpabilidade',
+                        power: 28,
+                        penalty: 0,
+                        desc: 'Nenhum ser humano razoável entregaria inocentes à barbárie.',
+                        quote: 'Não se exige heroísmo contra a própria consciência.'
+                    },
+                    {
+                        id: 'p2_2',
+                        title: 'Ausência de Mens Rea',
+                        category: 'Elemento Subjetivo',
+                        power: 22,
+                        penalty: 0,
+                        desc: 'O objetivo era salvar vidas, e não prejudicar a rede elétrica.',
+                        quote: 'A intenção salvadora desfigura o dolo delitivo.'
+                    },
+                    {
+                        id: 'p2_3',
+                        title: 'Coerção Moral Irresistível',
+                        category: 'Excludente de Culpabilidade',
+                        power: 26,
+                        penalty: 0,
+                        desc: 'O desespero dos refugiados atou as escolhas do réu.',
+                        quote: 'Onde falta livre escolha, extingue-se a culpa.'
+                    },
+                    {
+                        id: 'p2_4',
+                        title: 'Aceitação da Responsabilidade Objetiva',
+                        category: '⚠️ ARMADILHA DOGMÁTICA',
+                        power: -20,
+                        penalty: 20,
+                        desc: 'Concorda que o resultado gerado basta para haver punição grave!',
+                        quote: 'O resultado danoso fala por si só e exige pena.'
+                    },
+                    {
+                        id: 'p2_5',
+                        title: 'Teoria da Causalidade Única',
+                        category: '⚠️ TESE FRACA',
+                        power: -12,
+                        penalty: 12,
+                        desc: 'Tenta culpar a fiação e o sistema elétrico, gerando chacota.',
+                        quote: 'O interruptor estava com defeito de fábrica.'
+                    },
+                    {
+                        id: 'p2_6',
+                        title: 'Princípio da Proporcionalidade',
+                        category: 'Garantismo',
+                        power: 16,
+                        penalty: 0,
+                        desc: 'O apagão temporário foi irrisório perante as vidas preservadas.',
+                        quote: 'A reação da defesa foi proporcional à ameaça.'
+                    }
+                ]
+            },
+            {
+                phase: 3,
+                title: "Fase 3: Incoerência da Norma Exclusiva",
+                chargeTitle: "Desobediência e Motim Contra Autoridade",
+                chargeDesc: "Falcos: 'Hiro liderou uma manifestação pública questionando decretos de exceção impostos à população.'",
+                falcosPower: 55,
+                targetPower: 60,
+                falcosQuote: "Questionar decretos válidos é incentivar o caos! A ordem pública exige submissão incondicional!",
+                simonAdvice: "Ataque a legitimidade da norma! Use Desobediência Civil e Desconstrução da Biopolítica de Forcout.",
+                mikeQuote: "A desobediência civil é a reação natural quando a norma se transforma em mero instrumento de dominação.",
+                superDebateQuote: "A sua ordem não passa de servidão legalizada! Quando o direito atropela a justiça, desobedecer torna-se a única conduta verdadeiramente legal!",
+                bestComboIds: ['p3_1', 'p3_2'],
+                cards: [
+                    {
+                        id: 'p3_1',
+                        title: 'Direito à Desobediência Civil',
+                        category: 'Teoria Constitucional',
+                        power: 32,
+                        penalty: 0,
+                        desc: 'A resistência pacífica contra leis ilegítimas é um direito vital.',
+                        quote: 'Quando a lei é injusta, a resistência é dever.'
+                    },
+                    {
+                        id: 'p3_2',
+                        title: 'Desconstrução da Biopolítica',
+                        category: 'Filosofia (Forcout)',
+                        power: 35,
+                        penalty: 0,
+                        desc: 'Expos que os decretos buscavam o controle cego da população.',
+                        quote: 'O poder punitivo cria o crime para se expandir.'
+                    },
+                    {
+                        id: 'p3_3',
+                        title: 'Inviolabilidade da Hierarquia Estatal',
+                        category: '⚠️ ARMADILHA DOGMÁTICA',
+                        power: -25,
+                        penalty: 25,
+                        desc: 'Defende que qualquer decreto do governo deve ser obedecido cegamente!',
+                        quote: 'A ordem legal está acima de qualquer moralidade.'
+                    },
+                    {
+                        id: 'p3_4',
+                        title: 'Teoria da Adequação Social',
+                        category: 'Tipicidade Sociológica',
+                        power: 24,
+                        penalty: 0,
+                        desc: 'A população aclamou o protesto como um ato justo e legítimo.',
+                        quote: 'O povo validou o protesto antes do tribunal.'
+                    },
+                    {
+                        id: 'p3_5',
+                        title: 'Pedido de Clemência por Insubordinação',
+                        category: '⚠️ TESE FRACA',
+                        power: -15,
+                        penalty: 15,
+                        desc: 'Pede desculpas por incitar o povo a pensar por conta própria.',
+                        quote: 'Hiro errou ao incentivar questionamentos públicos.'
+                    },
+                    {
+                        id: 'p3_6',
+                        title: 'Liberdade de Expressão e Reunião',
+                        category: 'Direitos Fundamentais',
+                        power: 20,
+                        penalty: 0,
+                        desc: 'Reivindica a manifestação como exercício de cidadania.',
+                        quote: 'Gritar contra a opressão é direito inalienável.'
+                    }
+                ]
+            },
+            {
+                phase: 4,
+                title: "Fase 4: Vítima do Aparelho Institucional",
+                chargeTitle: "Conspiração e Traição ao Sistema",
+                chargeDesc: "Falcos: 'Hiro articulou redes paralelas de assistência fora do controle regulatório do Governo estatal!'",
+                falcosPower: 65,
+                targetPower: 70,
+                falcosQuote: "Hiro criou um 'Estado paralelo'! Ele desafiou o monopólio institucional de assistência!",
+                simonAdvice: "Mostre a omissão do Estado! Use Inversão do Dever de Tutela e Crítica ao Dispositivo Punitivo.",
+                mikeQuote: "Mostre que Falcos busca punir Hiro não pelo erro, mas pela audácia de expor a ineficiência do próprio sistema.",
+                superDebateQuote: "Vocês acusam Hiro de traição porque a solidariedade dele desmascarou a inércia cruel da sua burocracia estatal!",
+                bestComboIds: ['p4_1', 'p4_2'],
+                cards: [
+                    {
+                        id: 'p4_1',
+                        title: 'Inversão do Dever de Tutela',
+                        category: 'Responsabilidade do Estado',
+                        power: 38,
+                        penalty: 0,
+                        desc: 'A omissão do Estado forçou a comunidade a se auto-organizar.',
+                        quote: 'O Estado não pode punir a solução que ele omitiu.'
+                    },
+                    {
+                        id: 'p4_2',
+                        title: 'Crítica ao Dispositivo Punitivo',
+                        category: 'Filosofia (Forcout)',
+                        power: 40,
+                        penalty: 0,
+                        desc: 'A acusação de traição visa abafar o vexame da incompetência estatal.',
+                        quote: 'Punir Hiro é tentar salvar a ilusão de controle.'
+                    },
+                    {
+                        id: 'p4_3',
+                        title: 'Soberania Penal Indivisível',
+                        category: '⚠️ ARMADILHA DOGMÁTICA',
+                        power: -30,
+                        penalty: 30,
+                        desc: 'Afirma que apenas o governo tem o direito de prestar ajuda humanitária!',
+                        quote: 'Nenhum cidadão pode ajudar sem selo estatal.'
+                    },
+                    {
+                        id: 'p4_4',
+                        title: 'Ética da Existência Autêntica',
+                        category: 'Filosofia (Simon)',
+                        power: 34,
+                        penalty: 0,
+                        desc: 'Hiro escolheu agir responsavelmente perante a dor dos famintos.',
+                        quote: 'A omissão diante da dor alheia é cumplicidade.'
+                    },
+                    {
+                        id: 'p4_5',
+                        title: 'Alegar Erro de Fato',
+                        category: '⚠️ TESE FRACA',
+                        power: -15,
+                        penalty: 15,
+                        desc: 'Diz que Hiro não sabia que precisava de alvará para dar comida aos necessitados.',
+                        quote: 'Ele desconhecia a burocracia de licenças.'
+                    },
+                    {
+                        id: 'p4_6',
+                        title: 'Princípio da Solidariedade Comunitária',
+                        category: 'Direito Humano',
+                        power: 26,
+                        penalty: 0,
+                        desc: 'A ajuda mútua interpares é o pilar de qualquer sociedade civilizada.',
+                        quote: 'A fraternidade não necessita de autorização.'
+                    }
+                ]
+            },
+            {
+                phase: 5,
+                title: "Fase 5: Veredito de Dosimetria e Absolvição",
+                chargeTitle: "Pedido de Condenação Absoluta",
+                chargeDesc: "Falcos: 'Exijo pena máxima! Qualquer relativização aqui destruirá o respeito à Autoridade da Lei!'",
+                falcosPower: 75,
+                targetPower: 80,
+                falcosQuote: "O tribunal deve emitir um sinal inequívoco! Qualquer relativização destruirá a autoridade da Lei!",
+                simonAdvice: "É o confronto final! Funda a Atipicidade Material com a Desconstrução da Culpabilidade unificada!",
+                mikeQuote: "Lembre aos jurados: a verdadeira Justiça não reside em esmagar o réu, mas em compreender a realidade social.",
+                superDebateQuote: "Absolver Hiro Saints é libertar o próprio tribunal das amarras do autoritarismo! A história não perdoará a cegueira dogmática!",
+                bestComboIds: ['p5_1', 'p5_3'],
+                cards: [
+                    {
+                        id: 'p5_1',
+                        title: 'Síntese da Atipicidade Material',
+                        category: 'Tese Definitiva',
+                        power: 45,
+                        penalty: 0,
+                        desc: 'Falta dano antijurídico real. O ato de Hiro foi de pura salvação e utilidade social.',
+                        quote: 'A vida humana prevalece sobre formas estéreis.'
+                    },
+                    {
+                        id: 'p5_2',
+                        title: 'Proporcionalidade e Humanidade',
+                        category: 'Garantismo Penal',
+                        power: 38,
+                        penalty: 0,
+                        desc: 'Punições severas contra atos altruístas desmoralizam a própria Justiça.',
+                        quote: 'A pena não pode servir de vingança estatal.'
+                    },
+                    {
+                        id: 'p5_3',
+                        title: 'Desconstrução Unificada da Culpabilidade',
+                        category: 'Fusão Filosofia',
+                        power: 48,
+                        penalty: 0,
+                        desc: 'União de Forcout e Simon: A norma foi deslegitimada pelo contexto crítico.',
+                        quote: 'Não há delito quando a sociedade aclama o ato.'
+                    },
+                    {
+                        id: 'p5_4',
+                        title: 'Exemplo Punitivo Preventivo',
+                        category: '⚠️ ARMADILHA DOGMÁTICA',
+                        power: -35,
+                        penalty: 35,
+                        desc: 'Concorda que Hiro deve servir de exemplo para amedrontar a população!',
+                        quote: 'É preciso punir severamente para manter o medo.'
+                    },
+                    {
+                        id: 'p5_5',
+                        title: 'Pedido de Substituição por Cesta Básica',
+                        category: '⚠️ TESE FRACA',
+                        power: -20,
+                        penalty: 20,
+                        desc: 'Trata o julgamento histórico como uma insignificante infração menor.',
+                        quote: 'Pedimos para converter a prisão em doação alimentar.'
+                    },
+                    {
+                        id: 'p5_6',
+                        title: 'Soberania da Justiça Ética',
+                        category: 'Filosofia Suprema',
+                        power: 42,
+                        penalty: 0,
+                        desc: 'Exige que o tribunal julgue pelo valor da vida e não pelo medo da autoridade.',
+                        quote: 'A verdadeira ordem nasce da justiça e não do terror.'
+                    }
+                ]
+            }
+        ];
+
+        // INITIALIZE GAME
+        window.onload = function() {
+            audio.playGavel();
+            document.getElementById('modal-menu').classList.remove('hidden');
+        };
+
+        function startNewGame() {
+            audio.playCardClick();
+            currentPhaseIndex = 0;
+            relativizationProgress = 20;
+            powerPlenCharge = 0;
+            specialPowerUsesLeft = 1;
+            document.getElementById('modal-menu').classList.add('hidden');
+            document.getElementById('modal-gameover').classList.add('hidden');
+            document.getElementById('btn-close-menu').classList.remove('hidden');
+            loadPhase(currentPhaseIndex);
+            updateGauge();
+            updatePowerPlenUI();
+            appendDialogue("🏛️ <strong>Sessão Aberta:</strong> O juízo inicia a análise da denúncia apresentada por Falcos contra Hiro Saints.");
+            appendDialogue("🧐 <strong>Mike Forcout:</strong> 'Atenção! Cuidado com as teses armadilha. Argumentos dogmáticos vão REDUZIR nossa barra de Relativização!'");
+        }
+
+        // GERADOR DE MÃO COM CARTAS ALEATÓRIAS
+        function generateHandCards(phase) {
+            // Pega as cartas da fase e mistura com cartas aleatórias da pool global
+            const phaseCards = [...phase.cards];
+            const randomPool = [...extraRandomCardsPool].sort(() => 0.5 - Math.random());
+            
+            // Garante pelo menos as cartas principais e preenche/embaralha
+            const combined = [...phaseCards, ...randomPool.slice(0, 2)];
+            return combined.sort(() => 0.5 - Math.random()).slice(0, 6);
+        }
+
+        function reshuffleHand() {
+            audio.playCardClick();
+            const phase = gamePhases[currentPhaseIndex];
+            displayedHandCards = generateHandCards(phase);
+            renderHandCards();
+            resetSelectedCards();
+            appendDialogue("🎲 <strong>Baralho Repaginado:</strong> Novas cartas aleatórias foram sorteadas para sua mão!");
+        }
+
+        // LOAD PHASE DATA
+        function loadPhase(index) {
+            const phase = gamePhases[index];
+            selectedCards = [];
+            adviceUsedInPhase = false;
+
+            const mod = difficultyMultipliers[currentDifficulty];
+            const falcosModifiedPower = Math.round(phase.falcosPower * mod);
+
+            document.getElementById('phase-title').innerText = phase.title;
+            document.getElementById('falcos-charge-title').innerText = phase.chargeTitle;
+            document.getElementById('falcos-charge-desc').innerText = phase.chargeDesc;
+            document.getElementById('falcos-power').innerText = `Ataque: ${falcosModifiedPower} pts`;
+            
+            // Update Special Power Badge State
+            document.getElementById('special-power-badge').innerText = `${specialPowerUsesLeft}x`;
+            document.getElementById('btn-special-power').disabled = specialPowerUsesLeft <= 0;
+
+            // Sortear 6 cartas para a mão
+            displayedHandCards = generateHandCards(phase);
+            renderHandCards();
+            updateSelectedCardsUI();
+
+            appendDialogue(`🦅 <strong>Falcos (Acusação):</strong> "${phase.falcosQuote}"`);
+            startDebateTimer();
+        }
+
+        // RENDER CARDS IN FOOTER
+        function renderHandCards() {
+            const container = document.getElementById('cards-container');
+            container.innerHTML = '';
+
+            displayedHandCards.forEach(card => {
+                const cardEl = document.createElement('div');
+                const isTrap = card.power < 0;
+                const badgeColor = isTrap ? 'bg-red-950 text-red-400 border-red-800' : 'bg-amber-950/60 text-amber-400 border-amber-800/40';
+                const powerColor = isTrap ? 'text-red-400 border-red-700 bg-red-950' : 'text-amber-300 border-slate-700 bg-slate-900';
+
+                const isSelected = selectedCards.some(c => c.id === card.id);
+                const selectedClass = isSelected ? 'card-selected' : '';
+
+                cardEl.className = `bg-slate-950 border border-slate-800 hover:border-amber-500/60 rounded-xl p-2 flex flex-col justify-between cursor-pointer transition-all duration-200 card-glow relative group ${selectedClass}`;
+                cardEl.id = `card-${card.id}`;
+                cardEl.onclick = () => toggleCardSelection(card);
+
+                cardEl.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-0.5">
+                            <span class="text-[8px] font-bold ${badgeColor} border px-1 py-0.2 rounded leading-tight">${card.category}</span>
+                            <span class="text-[9px] font-mono font-bold ${powerColor} px-1 py-0.2 rounded border">${card.power >= 0 ? '+' : ''}${card.power}</span>
+                        </div>
+                        <h5 class="font-bold text-[10px] text-slate-200 mb-0.5 font-cinzel leading-tight">${card.title}</h5>
+                        <p class="text-[9px] text-slate-400 leading-tight mb-1 line-clamp-2">${card.desc}</p>
+                    </div>
+                    <div class="border-t border-slate-800/80 pt-1 mt-0.5 text-[8px] italic text-amber-200/60 font-serif line-clamp-1">
+                        "${card.quote}"
+                    </div>
+                `;
+                container.appendChild(cardEl);
+            });
+        }
+
+        // CARD SELECTION HANDLERS
+        function toggleCardSelection(card) {
+            audio.playCardClick();
+            const idx = selectedCards.findIndex(c => c.id === card.id);
+            const cardEl = document.getElementById(`card-${card.id}`);
+
+            if (idx >= 0) {
+                selectedCards.splice(idx, 1);
+                if (cardEl) cardEl.classList.remove('card-selected');
+            } else {
+                if (selectedCards.length >= 2) {
+                    appendDialogue("⚠️ <strong>Aviso:</strong> Você só pode selecionar no máximo 2 cartas por refutação.");
+                    return;
+                }
+                selectedCards.push(card);
+                if (cardEl) cardEl.classList.add('card-selected');
+            }
+
+            updateSelectedCardsUI();
+        }
+
+        function updateSelectedCardsUI() {
+            const countSpan = document.getElementById('cards-selected-count');
+            const powerSumSpan = document.getElementById('selected-power-sum');
+            const playBtn = document.getElementById('btn-play-argument');
+
+            if (countSpan) countSpan.innerText = `${selectedCards.length} / 2 Selecionadas`;
+            const sum = selectedCards.reduce((acc, c) => acc + c.power, 0);
+            if (powerSumSpan) powerSumSpan.innerText = `${sum} pts`;
+            if (playBtn) playBtn.disabled = selectedCards.length === 0;
+        }
+
+        function resetSelectedCards() {
+            selectedCards.forEach(c => {
+                const cardEl = document.getElementById(`card-${c.id}`);
+                if (cardEl) cardEl.classList.remove('card-selected');
+            });
+            selectedCards = [];
+            updateSelectedCardsUI();
+        }
+
+        // SIMON BEHAVOIR ADVICE
+        function triggerSimonAdvice() {
+            audio.playCardClick();
+            const phase = gamePhases[currentPhaseIndex];
+            appendDialogue(`👩‍⚖️ <strong>Simon Behavoir:</strong> "${phase.simonAdvice}"`);
+        }
+
+        // MIKE FORCOUT SPECIAL POWER (ANÁLISE ESTRATÉGICA EM MOMENTO CRÍTICO)
+        function useSpecialPower() {
+            if (specialPowerUsesLeft <= 0) {
+                appendDialogue("⚠️ <strong>Mike Forcout:</strong> Minha análise estratégica só podia ser convocada 1 vez no julgamento inteiro e já foi utilizada!");
+                return;
+            }
+
+            // Exigência de Momento Crítico: Relativização deve estar em 45% ou menos
+            if (relativizationProgress > 45) {
+                appendDialogue("⚠️ <strong>Mike Forcout:</strong> O tribunal ainda não está sob perigo iminente. Guarde minha análise única para um momento crítico (Barra de Relativização em 45% ou menos)!");
+                return;
+            }
+
+            audio.playGavel();
+            specialPowerUsesLeft--;
+            document.getElementById('special-power-badge').innerText = `${specialPowerUsesLeft}x`;
+            document.getElementById('btn-special-power').disabled = true;
+
+            const phase = gamePhases[currentPhaseIndex];
+            let highlightedCount = 0;
+
+            // Revela APENAS 1 única carta recomendada (sem expor as armadilhas!)
+            displayedHandCards.forEach(card => {
+                const cardEl = document.getElementById(`card-${card.id}`);
+                if (!cardEl) return;
+                
+                if (highlightedCount < 1 && phase.bestComboIds && phase.bestComboIds.includes(card.id)) {
+                    cardEl.classList.add('card-recommended');
+                    highlightedCount++;
+                }
+            });
+
+            appendDialogue("👁️ <strong>Análise Crítica de Forcout:</strong> Uma única tese-chave da bancada foi destacada em roxo no seu baralho!");
+        }
+
+        // POWER PLEN / SUPER DEBATE MECHANICS
+        function addPowerPlen(amount) {
+            powerPlenCharge = Math.min(100, powerPlenCharge + amount);
+            updatePowerPlenUI();
+        }
+
+        function updatePowerPlenUI() {
+            const bar = document.getElementById('power-plen-bar');
+            const txt = document.getElementById('power-plen-percent');
+            const btn = document.getElementById('btn-power-plen');
+
+            if (bar) bar.style.width = `${powerPlenCharge}%`;
+            if (txt) txt.innerText = `${powerPlenCharge}%`;
+
+            if (btn) {
+                if (powerPlenCharge >= 100) {
+                    btn.disabled = false;
+                    btn.className = "bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[11px] px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-xl transition power-plen-glow animate-bounce cursor-pointer";
+                } else {
+                    btn.disabled = true;
+                    btn.className = "bg-slate-800 border border-slate-700 opacity-40 text-slate-400 text-[11px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 transition cursor-not-allowed";
+                }
+            }
+        }
+
+        function triggerSuperDebate() {
+            if (powerPlenCharge < 100) return;
+            audio.playSuperDebate();
+            const phase = gamePhases[currentPhaseIndex];
+            document.getElementById('super-debate-quote').innerText = `"${phase.superDebateQuote}"`;
+            document.getElementById('modal-super-debate').classList.remove('hidden');
+        }
+
+        function closeSuperDebateModal() {
+            audio.playGavel();
+            document.getElementById('modal-super-debate').classList.add('hidden');
+            relativizationProgress = Math.min(100, relativizationProgress + 35);
+            powerPlenCharge = 0;
+            updateGauge();
+            updatePowerPlenUI();
+            appendDialogue("🔥 <strong>SUPER DEBATE EXECUTADO!</strong> A lacração sócio-filosófica desconcertou a acusação de Falcos! (+35% de Relativização)");
+        }
+
+        // MENU, SOUND & DIFFICULTY TOGGLES
+        function setDifficulty(diff) {
+            audio.playCardClick();
+            currentDifficulty = diff;
+            const badge = document.getElementById('diff-badge');
+            if (badge) badge.innerText = diff.charAt(0).toUpperCase() + diff.slice(1);
+
+            ['easy', 'normal', 'hard'].forEach(d => {
+                const btn = document.getElementById(`btn-diff-${d}`);
+                if (!btn) return;
+                if (d === diff) {
+                    btn.className = "bg-amber-900/60 text-amber-300 py-1.5 rounded-lg border border-amber-500 font-bold";
+                } else {
+                    btn.className = "bg-slate-800 hover:bg-slate-700 text-slate-400 py-1.5 rounded-lg border border-slate-700 font-normal";
+                }
+            });
+        }
+
+        function toggleSound() {
+            audio.enabled = !audio.enabled;
+            const btnText = document.getElementById('sound-status');
+            if (btnText) btnText.innerText = audio.enabled ? "ON" : "OFF";
+        }
+
+        function openMenuModal() {
+            audio.playCardClick();
+            document.getElementById('modal-menu').classList.remove('hidden');
+        }
+
+        function closeMenuModal() {
+            audio.playCardClick();
+            document.getElementById('modal-menu').classList.add('hidden');
+        }
+
+        // SUBMIT ARGUMENT TO COURT WITH PENALTY & DAMAGE MECHANICS
+        function submitArgument() {
+            if (selectedCards.length === 0) return;
+
+            stopDebateTimer();
+
+            const phase = gamePhases[currentPhaseIndex];
+            const mod = difficultyMultipliers[currentDifficulty];
+            const targetModifiedPower = Math.round(phase.targetPower * mod);
+
+            let totalPlayerPower = selectedCards.reduce((acc, c) => acc + c.power, 0);
+            let totalPenalties = selectedCards.reduce((acc, c) => acc + c.penalty, 0);
+
+            // Speed Bonus
+            let speedBonus = 0;
+            if (timeLeft >= 6 && totalPlayerPower > 0) {
+                speedBonus = 5;
+                totalPlayerPower += speedBonus;
+                appendDialogue(`⚡ <strong>Réplica Rápida (+${speedBonus} pts):</strong> Resposta veloz desestabilizou Falcos!`);
+            }
+
+            appendDialogue(`⚖️ <strong>Tese Apresentada:</strong> [${selectedCards.map(c => c.title).join(' + ')}]. Poder Efetivo: ${totalPlayerPower} pts.`);
+
+            // Check trap / bad argument penalty
+            if (totalPenalties > 0 || totalPlayerPower < 0) {
+                audio.playError();
+                const damage = Math.max(18, Math.round(totalPenalties * 1.25));
+                relativizationProgress = Math.max(0, relativizationProgress - damage);
+                updateGauge();
+
+                appendDialogue(`💥 <strong>ERRO CRÍTICO / ARMADILHA DOGMÁTICA!</strong> Você utilizou teses que deram razão à acusação! (-${damage}% de Relativização)`);
+                
+                if (checkGameOver()) return;
+
+                resetSelectedCards();
+                startDebateTimer();
+                return;
+            }
+
+            // Check success threshold
+            if (totalPlayerPower >= targetModifiedPower) {
+                audio.playSuccess();
+                const gain = Math.min(25, Math.round((totalPlayerPower / targetModifiedPower) * 18));
+                relativizationProgress = Math.min(100, relativizationProgress + gain);
+                updateGauge();
+
+                // Charge Power Plen
+                addPowerPlen(40);
+
+                appendDialogue(`🧐 <strong>Mike Forcout:</strong> "${phase.mikeQuote}"`);
+                appendDialogue(`🟢 <strong>Tribunal:</strong> Refutação perfeita! Falcos perdeu a sustentação da tese nesta fase! (+${gain}% de Relativização)`);
+
+                setTimeout(() => {
+                    showPhaseModal(true);
+                }, 1000);
+
+            } else {
+                audio.playError();
+                const penalty = currentDifficulty === 'hard' ? 16 : 12;
+                relativizationProgress = Math.max(0, relativizationProgress - penalty);
+                updateGauge();
+
+                appendDialogue(`🦅 <strong>Falcos:</strong> "Refutação fraca! Argumentos insuficientes para derrubar a norma formal!" (-${penalty}% Relativização)`);
+                
+                if (checkGameOver()) return;
+
+                resetSelectedCards();
+                startDebateTimer(); // Resume timer for next attempt
+            }
+        }
+
+        // UPDATE RELATIVIZATION GAUGE
+        function updateGauge() {
+            const bar = document.getElementById('gauge-bar');
+            const txt = document.getElementById('gauge-percent');
+            if (bar) bar.style.width = `${relativizationProgress}%`;
+            if (txt) txt.innerText = `${relativizationProgress}%`;
+        }
+
+        // APPEND DIALOGUE TO LOG
+        function appendDialogue(text) {
+            const box = document.getElementById('dialogue-box');
+            if (!box) return;
+            const msg = document.createElement('div');
+            msg.className = "bg-slate-900/90 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 leading-relaxed shadow-sm animate-fadeIn";
+            msg.innerHTML = text;
+            box.appendChild(msg);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // SAVE & LOAD PROMPTS
+        async function saveGamePrompt() {
+            audio.playCardClick();
+            const gameState = {
+                phaseIndex: currentPhaseIndex,
+                relativizationProgress: relativizationProgress,
+                powerPlenCharge: powerPlenCharge,
+                specialPowerUsesLeft: specialPowerUsesLeft,
+                difficulty: currentDifficulty
+            };
+
+            appendDialogue("💾 <strong>Sistema:</strong> Salvando o estado atual do julgamento...");
+            if (window.saveGameToCloud) {
+                const res = await window.saveGameToCloud(gameState);
+                if (res.success) {
+                    appendDialogue(`✅ <strong>Nuvem:</strong> ${res.msg}`);
+                } else {
+                    appendDialogue(`⚠️ <strong>Nuvem:</strong> Salvo na sessão local do navegador.`);
+                }
+            }
+        }
+
+        async function loadSavedGame() {
+            audio.playCardClick();
+            if (window.loadGameFromCloud) {
+                appendDialogue("📂 <strong>Sistema:</strong> Buscando registro de julgamento na nuvem...");
+                const data = await window.loadGameFromCloud();
+                if (data) {
+                    currentPhaseIndex = data.phaseIndex || 0;
+                    relativizationProgress = data.relativizationProgress || 20;
+                    powerPlenCharge = data.powerPlenCharge || 0;
+                    specialPowerUsesLeft = data.specialPowerUsesLeft || 1;
+                    currentDifficulty = data.difficulty || 'normal';
+
+                    setDifficulty(currentDifficulty);
+                    loadPhase(currentPhaseIndex);
+                    updateGauge();
+                    updatePowerPlenUI();
+
+                    document.getElementById('modal-menu').classList.add('hidden');
+                    document.getElementById('btn-close-menu').classList.remove('hidden');
+                    appendDialogue(`🟢 <strong>Nuvem:</strong> Julgamento da Fase ${currentPhaseIndex + 1} restaurado com sucesso!`);
+                    return;
+                }
+            }
+            appendDialogue("⚠️ <strong>Nuvem:</strong> Nenhum arquivo salvo foi encontrado.");
+            document.getElementById('modal-menu').classList.add('hidden');
+            startNewGame();
+        }
+
+        // MODAL MANAGEMENT
+        function showPhaseModal(isSuccess) {
+            stopDebateTimer();
+            const modal = document.getElementById('modal-phase');
+            const title = document.getElementById('modal-title');
+            const desc = document.getElementById('modal-desc');
+            const btn = document.getElementById('modal-btn');
+            const icon = document.getElementById('modal-icon');
+
+            modal.classList.remove('hidden');
+
+            if (currentPhaseIndex < gamePhases.length - 1) {
+                icon.innerText = "🏛️";
+                title.innerText = `Fase ${currentPhaseIndex + 1} Concluída!`;
+                desc.innerText = `Mike Forcout e Simon Behavoir conseguiram desconstruir a tese de Falcos. A causa de Hiro Saints ganha forte respaldo ético e jurídico.`;
+                btn.innerText = "Avançar para a Próxima Fase";
+            } else {
+                icon.innerText = "🏆";
+                title.innerText = "Vitória Absoluta da Relativização!";
+                desc.innerText = `Hiro Saints foi totalmente absolvido das acusações dogmáticas de Falcos! Com as teses de Mike Forcout e a ética situacional de Simon Behavoir, o tribunal redefiniu a própria concepção de Justiça.`;
+                btn.innerText = "Reiniciar o Julgamento";
+                btn.onclick = () => location.reload();
+            }
+        }
+
+        // ADVANCE TO NEXT PHASE
+        function nextPhase() {
+            audio.playGavel();
+            document.getElementById('modal-phase').classList.add('hidden');
+            currentPhaseIndex++;
+            // Nota: specialPowerUsesLeft NÃO recarrega nas fases para manter a alta dificuldade!
+            if (currentPhaseIndex < gamePhases.length) {
+                loadPhase(currentPhaseIndex);
+                appendDialogue(`--- 📜 <strong>Iniciando a Fase ${currentPhaseIndex + 1}</strong> ---`);
+            }
+        }
+    </script>
+</body>
+</html>
