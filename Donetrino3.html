@@ -1,0 +1,2077 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full select-none">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donetrino 3: Jeff Mail - Simulador Pericial Hardcore</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --win95-bg: #008080;
+            --win95-gray: #c0c0c0;
+            --win95-dark: #808080;
+            --win95-light: #ffffff;
+            --win95-blue: #000080;
+            --win95-blue-light: #1084d0;
+        }
+
+        body {
+            font-family: 'Share Tech Mono', 'VT323', monospace;
+            background-color: var(--win95-bg);
+            color: #000;
+            overflow: hidden;
+        }
+
+        /* Windows 95 Bevel Styling */
+        .win95-box {
+            background-color: var(--win95-gray);
+            border-top: 2px solid var(--win95-light);
+            border-left: 2px solid var(--win95-light);
+            border-right: 2px solid #000000;
+            border-bottom: 2px solid #000000;
+            box-shadow: inset 1px 1px 0px #dfdfdf, inset -1px -1px 0px var(--win95-dark);
+        }
+
+        .win95-box-inset {
+            background-color: #ffffff;
+            border-top: 2px solid var(--win95-dark);
+            border-left: 2px solid var(--win95-dark);
+            border-right: 2px solid var(--win95-light);
+            border-bottom: 2px solid var(--win95-light);
+            box-shadow: inset 1px 1px 0px #000000, inset -1px -1px 0px #dfdfdf;
+        }
+
+        .win95-btn {
+            background-color: var(--win95-gray);
+            border-top: 2px solid var(--win95-light);
+            border-left: 2px solid var(--win95-light);
+            border-right: 2px solid #000000;
+            border-bottom: 2px solid #000000;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .win95-btn:active {
+            border-top: 2px solid #000000;
+            border-left: 2px solid #000000;
+            border-right: 2px solid var(--win95-light);
+            border-bottom: 2px solid var(--win95-light);
+            padding-top: 1px;
+            padding-left: 1px;
+        }
+
+        .win95-titlebar {
+            background: linear-gradient(90deg, var(--win95-blue) 0%, var(--win95-blue-light) 100%);
+            color: #ffffff;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2px 4px;
+            cursor: move;
+        }
+
+        /* CRT Filter */
+        .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 999;
+            background-size: 100% 3px, 6px 100%;
+            pointer-events: none;
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar {
+            width: 16px;
+            height: 16px;
+            background: var(--win95-gray);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--win95-gray);
+            border-top: 2px solid var(--win95-light);
+            border-left: 2px solid var(--win95-light);
+            border-right: 2px solid #000;
+            border-bottom: 2px solid #000;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e0e0e0;
+        }
+
+        .terminal-glow {
+            text-shadow: 0 0 4px rgba(0, 255, 0, 0.6);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col relative crt" id="body-container">
+
+    <!-- MAIN MENU SETUP OVERLAY -->
+    <div id="main-menu-overlay" class="fixed inset-0 bg-[#008080] z-50 flex items-center justify-center p-4">
+        <div class="win95-box p-3 w-full max-w-2xl flex flex-col space-y-4 shadow-2xl">
+            <div class="win95-titlebar">
+                <span class="flex items-center gap-1">
+                    <svg class="w-4 h-4 fill-current text-yellow-300" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                    SETUP.EXE - DONETRINO 3: JEFF MAIL (PERÍCIA REALISTA)
+                </span>
+                <span class="text-xs">v9.5 HARDCORE UNTOUCHED</span>
+            </div>
+            
+            <div class="win95-box-inset p-4 flex flex-col space-y-3 text-sm">
+                <div class="text-center font-bold text-xl text-[#000080] border-b-2 border-gray-300 pb-2">
+                    POLÍCIA FEDERAL - DIVISÃO DE CRIMES COMPUTACIONAIS
+                </div>
+                
+                <p class="text-xs leading-relaxed">
+                    <strong>INQUÉRITO CRIMINAL PERICIAL #1995-JEFF:</strong> O tecnocrata <strong>Jeff</strong> infiltrou sabotagens no sistema estatal Donetrino OS. Você deve auditar <strong>MÚLTIPLOS E-MAILS e EVIDÊNCIAS</strong> por fase (de 3 a 6 provas) e registrar as descobertas no programa <strong>HIPED v6.0 Pro</strong>!
+                </p>
+                <p class="text-xs leading-relaxed text-blue-900 font-bold border-l-4 border-blue-900 pl-2 bg-blue-50 p-2">
+                    📢 RÁDIO DE POLÍCIA ATIVADO: Sempre que você descobrir uma prova em qualquer ferramenta (ExifTool, Pcap, John, Stego, HexEdit), o <strong>Delegado Siqueira</strong> enviará uma notificação informando qual programa abrir a seguir!
+                </p>
+            </div>
+
+            <!-- Options Panel inside Menu -->
+            <div id="menu-options-panel" class="win95-box-inset p-3 hidden text-xs space-y-2">
+                <div class="font-bold border-b pb-1 text-[#000080]">CONFIGURAÇÕES DO TERMINAL:</div>
+                <div class="flex justify-between items-center">
+                    <span>EFEITO MONITOR CRT:</span>
+                    <button onclick="toggleCRTMenu()" id="crt-toggle-btn" class="win95-btn px-2 py-0.5 text-xs">ATIVADO</button>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span>EFEITOS DE ÁUDIO SINTÉTICO (WEB AUDIO):</span>
+                    <button onclick="toggleAudioMenu()" id="audio-toggle-btn" class="win95-btn px-2 py-0.5 text-xs">ON</button>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span>PENALIDADE DE ERRO NO HIPED:</span>
+                    <span class="text-red-900 font-bold">MÁXIMA (+30°C CPU / -20% KERNEL)</span>
+                </div>
+            </div>
+
+            <!-- Menu Actions -->
+            <div class="flex justify-between items-center pt-2">
+                <span class="text-xs text-gray-700">Windows 95 Forensic Suite v9.5</span>
+                <div class="flex space-x-2">
+                    <button onclick="toggleMenuOptions()" class="win95-btn px-4 py-1 text-sm">OPÇÕES</button>
+                    <button onclick="startGame()" class="win95-btn px-6 py-1 text-sm bg-yellow-200 text-blue-950 font-bold hover:bg-yellow-100">INICIAR PERÍCIA [PLAY]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DESKTOP CONTAINER -->
+    <div id="desktop" class="flex-1 relative overflow-hidden p-3 grid grid-flow-col auto-cols-max grid-rows-6 gap-4">
+        <!-- ICON 0: OBJETIVOS DA MISSAO -->
+        <div onclick="openWindow('win-objectives')" class="flex flex-col items-center justify-center w-20 h-20 hover:bg-blue-900/40 p-1 cursor-pointer rounded">
+            <svg class="w-10 h-10 text-yellow-400 drop-shadow" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            <span class="text-white text-[11px] text-center drop-shadow font-bold mt-1 bg-yellow-900/80 px-1 border border-yellow-300">OBJETIVOS</span>
+        </div>
+
+        <!-- ICON 1: JEFF MAIL -->
+        <div onclick="openWindow('win-mail')" class="flex flex-col items-center justify-center w-20 h-20 hover:bg-blue-900/40 p-1 cursor-pointer rounded">
+            <svg class="w-10 h-10 text-yellow-300 drop-shadow" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            <span class="text-white text-[11px] text-center drop-shadow font-bold mt-1 bg-black/40 px-1">Jeff Mail</span>
+        </div>
+
+        <!-- ICON 2: HIPED PRO -->
+        <div onclick="openWindow('win-hiped')" class="flex flex-col items-center justify-center w-20 h-20 hover:bg-blue-900/40 p-1 cursor-pointer rounded">
+            <svg class="w-10 h-10 text-cyan-300 drop-shadow" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+            <span class="text-white text-[11px] text-center drop-shadow font-bold mt-1 bg-black/40 px-1">HIPED v6.0</span>
+        </div>
+
+        <!-- ICON 3: CMD TERMINAL -->
+        <div onclick="openWindow('win-cmd')" class="flex flex-col items-center justify-center w-20 h-20 hover:bg-blue-900/40 p-1 cursor-pointer rounded">
+            <svg class="w-10 h-10 text-black fill-current drop-shadow" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 12H6v-2h6v2zm-2-4l-4-4 1.41-1.41L10.83 12l-3.42 3.41L6 14l4-4z"/></svg>
+            <span class="text-white text-[11px] text-center drop-shadow font-bold mt-1 bg-black/40 px-1">Prompt CMD</span>
+        </div>
+
+        <!-- ICON 4: HEX EDITOR -->
+        <div onclick="openWindow('win-hex')" class="flex flex-col items-center justify-center w-20 h-20 hover:bg-blue-900/40 p-1 cursor-pointer rounded">
+            <svg class="w-10 h-10 text-purple-400 drop-shadow" fill="currentColor" viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+            <span class="text-white text-[11px] text-center drop-shadow font-bold mt-1 bg-black/40 px-1">HexEdit 95</span>
+        </div>
+
+        <!-- ICON 5: EXIF EXTRACTOR -->
+        <div onclick="openWindow('win-exif')" class="flex flex-col items-center justify-center w-20 h-20 hover:bg-blue-900/40 p-1 cursor-pointer rounded">
+            <svg class="w-10 h-10 text-emerald-400 drop-shadow" fill="currentColor" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+            <span class="text-white text-[11px] text-center drop-shadow font-bold mt-1 bg-black/40 px-1">ExifTool 95</span>
+        </div>
+
+        <!-- ICON 6: PCAP & WIRESHARK -->
+        <div onclick="openWindow('win-pcap')" class="flex flex-col items-center justify-center w-20 h-20 hover:bg-blue-900/40 p-1 cursor-pointer rounded">
+            <svg class="w-10 h-10 text-blue-400 drop-shadow" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            <span class="text-white text-[11px] text-center drop-shadow font-bold mt-1 bg-black/40 px-1">PcapCapture</span>
+        </div>
+
+        <!-- ICON 7: JOHN THE RIPPER -->
+        <div onclick="openWindow('win-john')" class="flex flex-col items-center justify-center w-20 h-20 hover:bg-blue-900/40 p-1 cursor-pointer rounded">
+            <svg class="w-10 h-10 text-red-500 drop-shadow" fill="currentColor" viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+            <span class="text-white text-[11px] text-center drop-shadow font-bold mt-1 bg-black/40 px-1">John Ripper</span>
+        </div>
+
+        <!-- ICON 8: STEGO & IMAGE LAB -->
+        <div onclick="openWindow('win-stego')" class="flex flex-col items-center justify-center w-20 h-20 hover:bg-blue-900/40 p-1 cursor-pointer rounded">
+            <svg class="w-10 h-10 text-pink-400 drop-shadow" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+            <span class="text-white text-[11px] text-center drop-shadow font-bold mt-1 bg-black/40 px-1">StegoLab 95</span>
+        </div>
+
+        <!-- ICON 9: FILE CROSS-VAL -->
+        <div onclick="openWindow('win-cross')" class="flex flex-col items-center justify-center w-20 h-20 hover:bg-blue-900/40 p-1 cursor-pointer rounded">
+            <svg class="w-10 h-10 text-amber-300 drop-shadow" fill="currentColor" viewBox="0 0 24 24"><path d="M10 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h5v-2H5V5h5V3zm9 0h-5v2h5v14h-5v2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 8h-4V8l-4 4 4 4v-3h4v-2z"/></svg>
+            <span class="text-white text-[11px] text-center drop-shadow font-bold mt-1 bg-black/40 px-1">CrossVal 95</span>
+        </div>
+
+        <!-- ICON 10: NETSCAPE INTRANET -->
+        <div onclick="openWindow('win-browser')" class="flex flex-col items-center justify-center w-20 h-20 hover:bg-blue-900/40 p-1 cursor-pointer rounded">
+            <svg class="w-10 h-10 text-teal-300 drop-shadow" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            <span class="text-white text-[11px] text-center drop-shadow font-bold mt-1 bg-black/40 px-1">Netscape Intranet</span>
+        </div>
+
+        <!-- ICON 11: DISK CARVER -->
+        <div onclick="openWindow('win-disk')" class="flex flex-col items-center justify-center w-20 h-20 hover:bg-blue-900/40 p-1 cursor-pointer rounded">
+            <svg class="w-10 h-10 text-gray-200 drop-shadow" fill="currentColor" viewBox="0 0 24 24"><path d="M6 2c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z"/></svg>
+            <span class="text-white text-[11px] text-center drop-shadow font-bold mt-1 bg-black/40 px-1">Disklab 95</span>
+        </div>
+
+        <!-- ICON 12: SYSTEM MONITOR -->
+        <div onclick="openWindow('win-sys')" class="flex flex-col items-center justify-center w-20 h-20 hover:bg-blue-900/40 p-1 cursor-pointer rounded">
+            <svg class="w-10 h-10 text-orange-400 drop-shadow" fill="currentColor" viewBox="0 0 24 24"><path d="M22 9V7h-2V5c0-1.1-.9-2-2-2h-2V1h-2v2h-4V1H8v2H6c-1.1 0-2 .9-2 2v2H2v2h2v4H2v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h4v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2V9h2zm-4 10H6V5h12v14z"/></svg>
+            <span class="text-white text-[11px] text-center drop-shadow font-bold mt-1 bg-black/40 px-1">Proteção BSOD</span>
+        </div>
+
+        <!-- ICON 13: COMO JOGAR (READ ME) -->
+        <div onclick="openWindow('win-readme')" class="flex flex-col items-center justify-center w-20 h-20 hover:bg-blue-900/40 p-1 cursor-pointer rounded">
+            <svg class="w-10 h-10 text-yellow-200 drop-shadow" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            <span class="text-white text-[11px] text-center drop-shadow font-bold mt-1 bg-black/40 px-1">COMO_JOGAR.TXT</span>
+        </div>
+    </div>
+
+    <!-- POLICE DISPATCH NOTIFICATION POP-UP -->
+    <div id="police-dispatch-modal" class="fixed top-12 right-6 w-96 z-50 win95-box p-3 shadow-2xl hidden border-2 border-yellow-400 bg-yellow-50">
+        <div class="win95-titlebar bg-gradient-to-r from-blue-900 to-blue-700 text-white flex justify-between items-center px-2 py-1">
+            <span class="flex items-center gap-1 font-bold text-xs">
+                <span class="animate-pulse text-yellow-300">📻</span>
+                RÁDIO PF - DELEGADO SIQUEIRA
+            </span>
+            <button onclick="closePoliceDispatch()" class="win95-btn px-1 text-xs">X</button>
+        </div>
+        <div class="p-2 space-y-2 text-xs font-mono">
+            <div class="flex items-start gap-2">
+                <span class="text-2xl">👮</span>
+                <div id="police-dispatch-body" class="text-gray-900 leading-relaxed font-bold bg-white p-2 border border-gray-300 flex-1">
+                    Excelente trabalho, Perito!
+                </div>
+            </div>
+            <div class="flex justify-end pt-1">
+                <button id="police-dispatch-btn" onclick="closePoliceDispatch()" class="win95-btn px-4 py-1 text-xs bg-yellow-200 text-blue-950 font-bold border border-yellow-700">ENTENDIDO! [IR PARA O PROGRAMA ➔]</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WINDOW 0: OBJETIVOS DA MISSAO -->
+    <div id="win-objectives" class="win95-box absolute top-4 left-4 w-[92%] md:w-[650px] h-[480px] flex flex-col z-20 shadow-2xl hidden">
+        <div class="win95-titlebar">
+            <span class="flex items-center gap-1">
+                <svg class="w-4 h-4 fill-current text-yellow-300" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                PAINEL DE OBJETIVOS - CHECKLIST COMPLETO DA FASE
+            </span>
+            <button onclick="closeWindow('win-objectives')" class="win95-btn px-2 py-0 text-xs font-bold bg-gray-300">X</button>
+        </div>
+
+        <div class="p-3 bg-yellow-50 text-xs flex-1 flex flex-col justify-between space-y-3 overflow-y-auto">
+            <div class="win95-box p-3 bg-white space-y-2 border">
+                <div class="font-bold text-blue-900 text-sm border-b pb-1 flex justify-between items-center">
+                    <span id="obj-phase-title">FASE 1: AUDITORIA DE E-MAILS</span>
+                    <span id="obj-phase-tag" class="text-xs bg-yellow-200 text-yellow-900 px-2 py-0.5 border border-yellow-600">3 EVIDÊNCIAS REQUERIDAS</span>
+                </div>
+                <p id="obj-phase-desc" class="text-gray-800 leading-relaxed font-mono">
+                    Carregando diretrizes de investigação pericial...
+                </p>
+            </div>
+
+            <div class="win95-box p-3 bg-gray-100 space-y-2 border flex-1 overflow-y-auto">
+                <div class="font-bold text-gray-900 border-b pb-1 flex justify-between items-center">
+                    <span>EVIDÊNCIAS A SEREM INVESTIGADAS E MANUAMENTE SUBMETIDAS:</span>
+                    <span id="obj-count-badge" class="text-blue-900 font-bold">0 / 0 CONCLUÍDOS</span>
+                </div>
+                <div id="obj-checklist" class="space-y-2 font-mono text-[11px] text-gray-800"></div>
+            </div>
+
+            <div class="flex justify-between items-center pt-2 border-t border-gray-300">
+                <span class="text-gray-600 text-[11px]">Submeta os dados corretos no HIPED para avançar sem causar BSOD.</span>
+                <button onclick="openWindow('win-hiped')" class="win95-btn px-4 py-1.5 bg-cyan-200 text-cyan-950 font-bold border border-cyan-800">ABRIR HIPED v6.0 ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP WINDOW 1: JEFF MAIL INTERCEPTOR -->
+    <div id="win-mail" class="win95-box absolute top-6 left-6 w-[92%] md:w-[760px] h-[500px] flex flex-col z-20 shadow-2xl hidden">
+        <div class="win95-titlebar">
+            <span class="flex items-center gap-1">
+                <svg class="w-4 h-4 fill-current text-yellow-300" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                JEFF MAIL INTERCEPTOR v4.0 - [INTERCEPTADOR DE MENSAGENS]
+            </span>
+            <button onclick="closeWindow('win-mail')" class="win95-btn px-2 py-0 text-xs font-bold bg-gray-300">X</button>
+        </div>
+
+        <div class="p-1 bg-[#c0c0c0] border-b flex space-x-2 text-xs">
+            <button onclick="refreshMailInbox()" class="win95-btn px-2 py-1 flex items-center gap-1">🔄 Atualizar Caixa</button>
+        </div>
+
+        <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-1 p-2 bg-[#c0c0c0] overflow-hidden">
+            <!-- Mail List -->
+            <div class="win95-box-inset p-1 overflow-y-auto space-y-1">
+                <div class="text-[11px] font-bold border-b pb-1 text-gray-700 flex justify-between">
+                    <span>MENSAGENS MÚLTIPLAS</span>
+                    <span id="mail-phase-tag" class="text-blue-900 font-bold">FASE 1</span>
+                </div>
+                <div id="mail-list-container" class="space-y-1 text-xs"></div>
+            </div>
+
+            <!-- Mail Reader Pane -->
+            <div class="md:col-span-2 win95-box-inset p-3 flex flex-col justify-between overflow-y-auto">
+                <div id="mail-reader-content" class="space-y-2 text-xs">
+                    <div class="text-gray-500 italic">Selecione uma mensagem da caixa lateral para iniciar a auditoria pericial...</div>
+                </div>
+
+                <div id="mail-quick-actions" class="border-t pt-2 mt-2 hidden text-xs bg-yellow-50 p-2 border space-y-1.5">
+                    <div class="font-bold text-gray-800 flex items-center justify-between">
+                        <span>📎 ANEXO DE ARQUIVO DETECTADO:</span>
+                        <span id="mail-attachment-info" class="text-blue-900 font-mono text-[11px]">---</span>
+                    </div>
+                    <div class="text-[10px] text-gray-600 italic">Abra a ferramenta forense correspondente para examinar este anexo manualmente.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP WINDOW 2: HIPED v6.0 PRO (CLEAN UNTOUCHED TEXTBOXES) -->
+    <div id="win-hiped" class="win95-box absolute top-10 left-12 w-[92%] md:w-[680px] h-[510px] flex flex-col z-20 shadow-2xl hidden">
+        <div class="win95-titlebar">
+            <span class="flex items-center gap-1">
+                <svg class="w-4 h-4 fill-current text-cyan-300" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+                HIPED v6.0 PRO - SUBMISSÃO MANUAL DE PROVAS E CRIPTO-VALIDAÇÃO
+            </span>
+            <button onclick="closeWindow('win-hiped')" class="win95-btn px-2 py-0 text-xs font-bold bg-gray-300">X</button>
+        </div>
+
+        <div class="p-3 flex-1 flex flex-col justify-between space-y-2 text-xs">
+            <div class="win95-box-inset p-2 bg-black text-green-400 font-mono h-32 overflow-y-auto space-y-1" id="hiped-log-console">
+                <div>[HIPED SYSTEM READY]: Terminal de Registro Criminal ativo.</div>
+                <div>[EXIGÊNCIA]: Preencha os 4 campos manualmente para registrar cada prova investigada.</div>
+            </div>
+
+            <!-- Manual Submission Form - UNTOUCHED PLACEHOLDERS -->
+            <div class="win95-box p-2 bg-gray-200 space-y-2 border border-gray-400">
+                <div class="font-bold text-blue-950 border-b pb-1 flex justify-between items-center">
+                    <span>FORMULÁRIO DE DIGITAÇÃO DE PROVA:</span>
+                    <span class="text-[10px] text-red-800 font-bold">⚠️ Erros de digitação geram pânico térmico na CPU!</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold">1. TIPO DE PROVA:</label>
+                        <select id="hiped-input-type" class="win95-box-inset w-full p-1 text-xs font-bold">
+                            <option value="EMAIL">E-mail Interceptado (EMAIL)</option>
+                            <option value="EXIF">Metadados EXIF GPS (EXIF)</option>
+                            <option value="HEX">Offset Hexadecimal (HEX)</option>
+                            <option value="PCAP">Captura de Pacote PCAP (PCAP)</option>
+                            <option value="HASH">Hash de Senha Descoberta (HASH)</option>
+                            <option value="STEGO">Frase Esteganografada (STEGO)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold">2. ID DA PROVA:</label>
+                        <input type="text" id="hiped-input-id" placeholder="DIGITE O ID (EX: M1_1)" class="win95-box-inset w-full p-1 text-xs font-mono uppercase">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold">3. VALOR / HASH / COORDENADA:</label>
+                        <input type="text" id="hiped-input-hash" placeholder="DIGITE O VALOR EXTRAÍDO" class="win95-box-inset w-full p-1 text-xs font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold">4. CÓDIGO DE REF DE DISCO:</label>
+                        <input type="text" id="hiped-input-ref" placeholder="DIGITE O CÓDIGO DE REF" class="win95-box-inset w-full p-1 text-xs font-mono uppercase">
+                    </div>
+                </div>
+                <div class="flex justify-end pt-1">
+                    <button onclick="submitHipedManual()" class="win95-btn px-4 py-1.5 bg-yellow-200 text-blue-950 font-bold border border-yellow-700 hover:bg-yellow-100">VALIDAR PROVA [AUTENTICAR]</button>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="win95-box p-2 space-y-1">
+                <div class="flex justify-between items-center font-bold">
+                    <span>PROGRESSO DE EVIDÊNCIAS REGISTRADAS:</span>
+                    <span id="hiped-progress-text" class="text-blue-900">0 / 0 (0%)</span>
+                </div>
+                <div class="w-full bg-gray-300 border-2 border-gray-600 h-4 p-0.5">
+                    <div id="hiped-progress-bar" class="bg-blue-800 h-full w-0 transition-all duration-300"></div>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center">
+                <span class="text-gray-600 text-[11px]">Selo Pericial Polícia Federal #PF-9500</span>
+                <button onclick="verifyPhaseCompletion()" class="win95-btn px-4 py-1.5 bg-green-200 text-green-950 font-bold border border-green-800">CONCLUIR FASE & AVANÇAR ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP WINDOW 3: CMD / MS-DOS TERMINAL -->
+    <div id="win-cmd" class="win95-box absolute top-12 left-16 w-[92%] md:w-[640px] h-[420px] flex flex-col z-20 shadow-2xl hidden">
+        <div class="win95-titlebar">
+            <span class="flex items-center gap-1">
+                <svg class="w-4 h-4 fill-current text-white" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 12H6v-2h6v2zm-2-4l-4-4 1.41-1.41L10.83 12l-3.42 3.41L6 14l4-4z"/></svg>
+                MS-DOS PROMPT - CONSOLE DE SCRIPTS PERICIAIS
+            </span>
+            <button onclick="closeWindow('win-cmd')" class="win95-btn px-2 py-0 text-xs font-bold bg-gray-300">X</button>
+        </div>
+
+        <div class="p-2 bg-black text-green-400 font-mono text-xs flex-1 flex flex-col justify-between overflow-hidden">
+            <div id="cmd-output" class="flex-1 overflow-y-auto space-y-1 terminal-glow p-1">
+                <div>Microsoft(R) Windows 95 [Version 4.00.950]</div>
+                <div>Console de Comandos Periciais. Digite 'HELP' para comandos.</div>
+            </div>
+            <div class="flex items-center space-x-1 border-t border-green-800 pt-1">
+                <span class="text-green-500 font-bold">C:\FORENSIC&gt;</span>
+                <input type="text" id="cmd-input" class="bg-transparent text-green-300 outline-none flex-1 font-mono text-xs" autofocus onkeydown="handleCmdKeyDown(event)">
+            </div>
+        </div>
+    </div>
+
+    <!-- APP WINDOW 4: HEX EDITOR -->
+    <div id="win-hex" class="win95-box absolute top-14 left-20 w-[92%] md:w-[640px] h-[430px] flex flex-col z-20 shadow-2xl hidden">
+        <div class="win95-titlebar">
+            <span class="flex items-center gap-1">
+                <svg class="w-4 h-4 fill-current text-purple-300" viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+                HEXEDIT 95 - EDITOR HEXADECIMAL DE OFFSETS BRUTOS
+            </span>
+            <button onclick="closeWindow('win-hex')" class="win95-btn px-2 py-0 text-xs font-bold bg-gray-300">X</button>
+        </div>
+
+        <div class="p-2 bg-[#c0c0c0] text-xs flex-1 flex flex-col justify-between space-y-2">
+            <div class="flex justify-between items-center bg-gray-300 p-1 border">
+                <span id="hex-filename" class="font-bold text-purple-950">ARQUIVO: SELECIONE UM ARQUIVO COM ANEXO</span>
+                <button onclick="loadHexTarget()" class="win95-btn px-2 py-0.5 text-xs">📁 Carregar Anexo</button>
+            </div>
+
+            <!-- Hex Viewer Grid -->
+            <div id="hex-display" class="win95-box-inset p-2 bg-gray-900 text-green-400 font-mono text-[11px] h-52 overflow-y-auto whitespace-pre leading-relaxed">
+00000000: 4F 50 45 4E 20 46 49 4C 45 20 54 4F 20 56 49 45  | SELECIONE UM ANEX
+00000010: 57 20 48 45 58 41 44 45 43 49 4D 41 4C 20 44 41  | O PARA INSPECIONAR
+            </div>
+
+            <!-- Operations -->
+            <div class="win95-box p-2 bg-gray-100 flex justify-between items-center space-x-2">
+                <span class="font-bold text-gray-800">OPERADOR DE SHIFT / CIPHER:</span>
+                <div class="flex space-x-1 items-center">
+                    <input type="text" id="hex-shift-key" placeholder="CHAVE (EX: 0x..)" class="win95-box-inset px-2 py-0.5 w-28 text-xs font-mono uppercase">
+                    <button onclick="applyHexShift()" class="win95-btn px-3 py-0.5 bg-purple-200 text-purple-950 font-bold">DESCRIPTOGRAFAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP WINDOW 5: EXIF EXTRACTOR -->
+    <div id="win-exif" class="win95-box absolute top-16 left-24 w-[92%] md:w-[580px] h-[410px] flex flex-col z-20 shadow-2xl hidden">
+        <div class="win95-titlebar">
+            <span class="flex items-center gap-1">
+                <svg class="w-4 h-4 fill-current text-emerald-300" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                EXIFTOOL 95 - EXTRATOR DE METADADOS DE IMAGEM JPEG
+            </span>
+            <button onclick="closeWindow('win-exif')" class="win95-btn px-2 py-0 text-xs font-bold bg-gray-300">X</button>
+        </div>
+
+        <div class="p-2 bg-[#c0c0c0] text-xs flex-1 flex flex-col justify-between space-y-2">
+            <div class="flex justify-between items-center">
+                <span class="font-bold text-emerald-950">INSPEÇÃO DE HEADERS JPEG:</span>
+                <button onclick="scanExifImage()" class="win95-btn px-3 py-1 bg-emerald-100 font-bold">📷 Analisar Anexo Atual</button>
+            </div>
+
+            <div id="exif-results" class="win95-box-inset p-3 bg-gray-900 text-emerald-400 font-mono h-56 overflow-y-auto space-y-1">
+                <div>[EXIFTOOL READY]: Clique em 'Analisar Anexo Atual' para inspecionar tags GPS e modelo de câmera da imagem selecionada no Jeff Mail.</div>
+            </div>
+
+            <div class="flex justify-between items-center text-[11px] text-gray-700 pt-1">
+                <span id="exif-coords-badge" class="font-bold text-blue-900">GPS: NENHUMA TAG EXTRAÍDA</span>
+                <span class="text-gray-500 italic">Anote as coordenadas para registrar manualmente no HIPED.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP WINDOW 6: PCAP WIRESHARK LITE -->
+    <div id="win-pcap" class="win95-box absolute top-20 left-28 w-[92%] md:w-[660px] h-[440px] flex flex-col z-20 shadow-2xl hidden">
+        <div class="win95-titlebar">
+            <span class="flex items-center gap-1">
+                <svg class="w-4 h-4 fill-current text-blue-300" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                PCAP CAPTURE & WIRESHARK LITE 95
+            </span>
+            <button onclick="closeWindow('win-pcap')" class="win95-btn px-2 py-0 text-xs font-bold bg-gray-300">X</button>
+        </div>
+
+        <div class="p-2 bg-[#c0c0c0] text-xs flex-1 flex flex-col justify-between space-y-2">
+            <div class="flex justify-between items-center bg-gray-300 p-1 border">
+                <span class="font-bold text-blue-900">FILTRO DE PACOTES: TCP / HTTP / FTP</span>
+                <button onclick="loadPcapStream()" class="win95-btn px-3 py-0.5 font-bold">📡 Interceptar Tráfego</button>
+            </div>
+
+            <!-- Packet Stream Grid -->
+            <div id="pcap-packet-list" class="win95-box-inset p-2 bg-gray-900 text-cyan-300 font-mono text-[11px] h-32 overflow-y-auto space-y-1">
+                <div>[PCAP READY]: Selecione um e-mail com anexo PCAP e clique em 'Interceptar Tráfego'.</div>
+            </div>
+
+            <!-- Stream Payload Inspector -->
+            <div class="win95-box p-2 bg-black text-yellow-300 font-mono text-[11px] h-28 overflow-y-auto">
+                <div class="font-bold text-white border-b border-gray-700 pb-0.5">
+                    RECONSTRUÇÃO DE PAYLOAD HTTP/TCP:
+                </div>
+                <div id="pcap-payload-content" class="pt-1">Selecione um pacote para inspecionar os cabeçalhos.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP WINDOW 7: JOHN THE RIPPER 95 -->
+    <div id="win-john" class="win95-box absolute top-24 left-32 w-[92%] md:w-[560px] h-[430px] flex flex-col z-20 shadow-2xl hidden">
+        <div class="win95-titlebar">
+            <span class="flex items-center gap-1">
+                <svg class="w-4 h-4 fill-current text-red-400" viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+                JOHN THE RIPPER v1.0 - QUEBRADOR DE HASHES E SENHAS
+            </span>
+            <button onclick="closeWindow('win-john')" class="win95-btn px-2 py-0 text-xs font-bold bg-gray-300">X</button>
+        </div>
+
+        <div class="p-3 bg-[#c0c0c0] text-xs flex-1 flex flex-col justify-between space-y-2">
+            <div class="win95-box-inset p-2 bg-gray-900 text-yellow-300 font-mono space-y-1">
+                <div class="font-bold text-white border-b border-gray-700 pb-1 flex justify-between">
+                    <span>MÓDULO DE ATAQUE DE DICIONÁRIO E FORÇA BRUTA</span>
+                    <button onclick="clearJohnTarget()" class="text-xs text-red-300 underline font-normal">Limpar</button>
+                </div>
+                <div>Hash do Alvo: <span id="john-target-hash" class="text-cyan-300 font-bold">NENHUM HASH CARREGADO</span></div>
+            </div>
+
+            <div class="win95-box p-3 space-y-2">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-bold text-[11px]">TIPO DE HASH:</label>
+                        <select id="john-type-select" class="win95-box-inset w-full p-1 text-xs">
+                            <option value="MD5">MD5 Hex Digest</option>
+                            <option value="NTLM">NTLM Windows 95</option>
+                            <option value="PIN">Combinação Numérica (4-6 Dígitos)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-[11px]">DICIONÁRIO / REGRA:</label>
+                        <select id="john-dict-select" class="win95-box-inset w-full p-1 text-xs">
+                            <option value="GOV1995">wordlist_gov_1995.txt</option>
+                            <option value="NUMERIC">Combinações do Senado (Dígitos)</option>
+                            <option value="JEFF_NAMES">politicos_e_criadores.txt</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="runJohnRipper()" class="win95-btn w-full py-1.5 bg-red-200 text-red-950 font-bold hover:bg-red-100">EXECUTAR ATAQUE DE QUEBRA [BRUTE FORCE]</button>
+            </div>
+
+            <div id="john-result-output" class="win95-box-inset p-2 bg-black text-green-400 font-mono h-24 overflow-y-auto text-[11px]">
+                Aguardando início do ataque de quebra de hash...
+            </div>
+        </div>
+    </div>
+
+    <!-- APP WINDOW 8: STEGO & IMAGE LAB -->
+    <div id="win-stego" class="win95-box absolute top-12 left-36 w-[92%] md:w-[580px] h-[420px] flex flex-col z-20 shadow-2xl hidden">
+        <div class="win95-titlebar">
+            <span class="flex items-center gap-1">
+                <svg class="w-4 h-4 fill-current text-pink-300" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                STEGOLAB 95 - ANÁLISE DE ESTEGANOGRAFIA EM BITS LSB
+            </span>
+            <button onclick="closeWindow('win-stego')" class="win95-btn px-2 py-0 text-xs font-bold bg-gray-300">X</button>
+        </div>
+
+        <div class="p-2 bg-[#c0c0c0] text-xs flex-1 flex flex-col justify-between space-y-2">
+            <div class="flex justify-between items-center bg-gray-300 p-1 border">
+                <span class="font-bold text-pink-950">FILTRO DE PLANO DE BITS (LSB):</span>
+                <div class="space-x-1">
+                    <button onclick="applyStegoFilter('LSB1')" class="win95-btn px-2 py-0.5">BitPlane 0</button>
+                    <button onclick="applyStegoFilter('INVERT')" class="win95-btn px-2 py-0.5">Inverter Cores</button>
+                    <button onclick="applyStegoFilter('CONTRAST')" class="win95-btn px-2 py-0.5">Contraste Max</button>
+                </div>
+            </div>
+
+            <!-- Canvas Viewport -->
+            <div class="win95-box-inset p-2 bg-gray-900 flex items-center justify-center h-52 relative overflow-hidden">
+                <canvas id="stego-canvas" width="400" height="180" class="border border-gray-600 bg-black"></canvas>
+            </div>
+
+            <div class="win95-box p-2 bg-gray-100 font-mono text-[11px]">
+                <span class="font-bold text-gray-800">MENSAGEM OCULTA REVELADA:</span>
+                <div id="stego-extracted-text" class="text-blue-900 font-bold truncate">Nenhum padrão LSB extraído.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP WINDOW 9: CROSSVAL 95 -->
+    <div id="win-cross" class="win95-box absolute top-16 left-40 w-[92%] md:w-[620px] h-[430px] flex flex-col z-20 shadow-2xl hidden">
+        <div class="win95-titlebar">
+            <span class="flex items-center gap-1">
+                <svg class="w-4 h-4 fill-current text-amber-300" viewBox="0 0 24 24"><path d="M10 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h5v-2H5V5h5V3zm9 0h-5v2h5v14h-5v2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 8h-4V8l-4 4 4 4v-3h4v-2z"/></svg>
+                CROSSVAL 95 - COMPARADOR MANUAL DE E-MAILS vs DISCO
+            </span>
+            <button onclick="closeWindow('win-cross')" class="win95-btn px-2 py-0 text-xs font-bold bg-gray-300">X</button>
+        </div>
+
+        <div class="p-2 bg-[#c0c0c0] text-xs flex-1 flex flex-col justify-between space-y-2">
+            <div class="grid grid-cols-2 gap-2 flex-1">
+                <!-- Side A: Mail Claim -->
+                <div class="win95-box p-2 bg-yellow-50 space-y-2 flex flex-col justify-between border">
+                    <div class="font-bold text-yellow-950 border-b pb-1">FONTE A: DECLARAÇÃO NO E-MAIL</div>
+                    <div id="cross-side-a" class="text-[11px] space-y-1 font-mono text-gray-800 flex-1 overflow-y-auto">
+                        Selecione um e-mail para auditoria de divergência...
+                    </div>
+                </div>
+
+                <!-- Side B: Local Disk File -->
+                <div class="win95-box p-2 bg-blue-50 space-y-2 flex flex-col justify-between border">
+                    <div class="font-bold text-blue-950 border-b pb-1">FONTE B: DADOS DO DISQUETE/LOCAL</div>
+                    <div id="cross-side-b" class="text-[11px] space-y-1 font-mono text-gray-800 flex-1 overflow-y-auto">
+                        Selecione um setor de disquete no Disklab...
+                    </div>
+                </div>
+            </div>
+
+            <div class="win95-box p-2 bg-gray-200 flex justify-between items-center">
+                <span id="cross-match-status" class="font-bold text-red-800">DIVERGÊNCIA DETECTADA: VERIFIQUE ASSINATURAS</span>
+                <button onclick="validateCrossMatch()" class="win95-btn px-4 py-1 bg-amber-200 text-amber-950 font-bold border border-amber-800">CONFIRMAR FRAUDE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP WINDOW 10: NETSCAPE INTRANET BROWSER -->
+    <div id="win-browser" class="win95-box absolute top-10 left-44 w-[92%] md:w-[650px] h-[430px] flex flex-col z-20 shadow-2xl hidden">
+        <div class="win95-titlebar">
+            <span class="flex items-center gap-1">
+                <svg class="w-4 h-4 fill-current text-teal-300" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                NETSCAPE NAVIGATOR 2.0 - ARCHIVE DE INTRANET GOVERNAMENTAL
+            </span>
+            <button onclick="closeWindow('win-browser')" class="win95-btn px-2 py-0 text-xs font-bold bg-gray-300">X</button>
+        </div>
+
+        <div class="p-2 bg-[#c0c0c0] text-xs flex-1 flex flex-col justify-between space-y-2">
+            <!-- URL Bar -->
+            <div class="flex items-center space-x-2 bg-gray-300 p-1 border">
+                <span class="font-bold text-gray-700">URL:</span>
+                <input type="text" id="browser-url-input" value="http://intranet.senado.gov.br/logs/1995" class="win95-box-inset flex-1 px-2 py-0.5 text-xs font-mono" readonly>
+                <button onclick="browseIntranetPage()" class="win95-btn px-3 py-0.5 font-bold">Ir ➔</button>
+            </div>
+
+            <!-- Web Content Viewport -->
+            <div id="browser-viewport" class="win95-box-inset p-3 bg-white text-gray-900 font-mono text-xs flex-1 overflow-y-auto space-y-2">
+                <div class="border-b-2 border-teal-800 pb-1 text-teal-900 font-bold text-sm">PORTAL INTERNO DE SERVIDORES DO GOVERNO FEDERAL (1995)</div>
+                <div id="browser-dynamic-content" class="p-2 bg-gray-100 border text-[11px] space-y-1">
+                    <div>Clique em 'Ir' para consultar os registros de cache do servidor...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP WINDOW 11: DISKLAB CARVER -->
+    <div id="win-disk" class="win95-box absolute top-14 left-48 w-[92%] md:w-[600px] h-[430px] flex flex-col z-20 shadow-2xl hidden">
+        <div class="win95-titlebar">
+            <span class="flex items-center gap-1">
+                <svg class="w-4 h-4 fill-current text-gray-200" viewBox="0 0 24 24"><path d="M6 2c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z"/></svg>
+                DISKLAB 95 - CARVER DE SETORES DE DISCO DELETADOS
+            </span>
+            <button onclick="closeWindow('win-disk')" class="win95-btn px-2 py-0 text-xs font-bold bg-gray-300">X</button>
+        </div>
+
+        <div class="p-2 bg-[#c0c0c0] text-xs space-y-2 flex-1 flex flex-col justify-between">
+            <div>
+                <p class="mb-1 text-gray-800 font-bold">Clique nos setores corrompidos (vermelhos) para reconstruir blocos apagados pelo Jeff:</p>
+                <div id="cluster-grid" class="win95-box-inset p-2 grid grid-cols-8 md:grid-cols-12 gap-1 h-48 overflow-y-auto"></div>
+            </div>
+
+            <div class="win95-box p-2 bg-gray-100 text-xs space-y-1">
+                <div class="font-bold text-blue-900" id="carver-file-status">SELETOR DE SETORES: NENHUM ARQUIVO SELECIONADO</div>
+                <div id="carver-file-preview" class="text-gray-700 font-mono text-[11px] truncate">---</div>
+            </div>
+
+            <div class="flex justify-between items-center">
+                <span id="floppy-status-text" class="text-gray-700 text-xs font-bold">DISQUETE (A:\): PRONTO</span>
+                <button onclick="exportRecoveredToFloppy()" id="export-floppy-btn" class="win95-btn px-3 py-1 bg-yellow-100 font-bold hidden">SALVAR NO DISQUETE [A:\]</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP WINDOW 12: SYSTEM MONITOR & ANTI-BSOD SHIELD -->
+    <div id="win-sys" class="win95-box absolute top-18 left-52 w-[92%] md:w-[500px] h-[380px] flex flex-col z-20 shadow-2xl hidden">
+        <div class="win95-titlebar">
+            <span class="flex items-center gap-1">
+                <svg class="w-4 h-4 fill-current text-orange-400" viewBox="0 0 24 24"><path d="M22 9V7h-2V5c0-1.1-.9-2-2-2h-2V1h-2v2h-4V1H8v2H6c-1.1 0-2 .9-2 2v2H2v2h2v4H2v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h4v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2V9h2zm-4 10H6V5h12v14z"/></svg>
+                PAINEL DE CONTROLE - PREVENÇÃO DE BSOD
+            </span>
+            <button onclick="closeWindow('win-sys')" class="win95-btn px-2 py-0 text-xs font-bold bg-gray-300">X</button>
+        </div>
+
+        <div class="p-3 bg-[#c0c0c0] text-xs flex-1 flex flex-col justify-between space-y-3">
+            <div class="space-y-2">
+                <div>
+                    <div class="flex justify-between font-bold mb-1">
+                        <span>INTEGRIDADE DO KERNEL WIN95:</span>
+                        <span id="sys-kernel-val" class="text-green-800">100%</span>
+                    </div>
+                    <div class="w-full bg-gray-300 border-2 border-gray-600 h-4 p-0.5">
+                        <div id="sys-kernel-bar" class="bg-green-600 h-full w-full transition-all duration-300"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between font-bold mb-1">
+                        <span>TEMPERATURA DO PROCESSADOR (CPU):</span>
+                        <span id="sys-temp-val" class="text-blue-900">40°C</span>
+                    </div>
+                    <div class="w-full bg-gray-300 border-2 border-gray-600 h-4 p-0.5">
+                        <div id="sys-temp-bar" class="bg-blue-600 h-full w-[40%] transition-all duration-300"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="win95-box p-2 bg-yellow-50 text-[11px] space-y-1">
+                <span class="font-bold text-red-800">AVISO DE PENALIDADE DE ERRO:</span>
+                <p>Submeter dados incorretos no HIPED aquece a CPU em +30°C e corrompe 20% do Kernel. Se atingir 100°C, a Tela Azul da Morte (BSOD) resetará o jogo!</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="coolCPUAction()" class="win95-btn p-2 text-xs text-blue-900 font-bold">❄️ RESFRIAR CPU (-20°C)</button>
+                <button onclick="purgeRAMAction()" class="win95-btn p-2 text-xs text-green-900 font-bold">🧹 LIMPAR HEAP DE MEMÓRIA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP WINDOW 13: COMO JOGAR (NOTEPAD) -->
+    <div id="win-readme" class="win95-box absolute top-8 left-8 w-[92%] md:w-[620px] h-[460px] flex flex-col z-20 shadow-2xl hidden">
+        <div class="win95-titlebar">
+            <span class="flex items-center gap-1">
+                <svg class="w-4 h-4 fill-current text-yellow-200" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                BLOCO DE NOTAS - COMO_JOGAR.TXT
+            </span>
+            <button onclick="closeWindow('win-readme')" class="win95-btn px-2 py-0 text-xs font-bold bg-gray-300">X</button>
+        </div>
+
+        <div class="p-3 bg-white text-black font-mono text-xs flex-1 overflow-y-auto space-y-3 leading-relaxed win95-box-inset">
+            <div class="text-blue-900 font-bold text-sm border-b pb-1">
+                =======================================================<br>
+                MANUAL DO PERITO CRIMINAL - MODO DE ANÁLISE MANUAL<br>
+                =======================================================
+            </div>
+
+            <p><strong>OBJETIVO:</strong><br>
+            Você é um Perito Criminal da Polícia Federal auditando as mensagens e sabotagens do tecnocrata Jeff. O jogo possui 7 FASES progressivas com um número crescente de evidências a investigar.</p>
+
+            <div class="bg-gray-100 p-2 border space-y-1">
+                <p class="font-bold text-blue-900">📻 ORIENTAÇÃO DO RÁDIO POLICIAL:</p>
+                <p>Cada vez que você descobre uma prova em um programa (ExifTool, Pcap, John, StegoLab, HexEdit, Netscape), o Delegado Siqueira avisa no RÁDIO qual aplicativo abrir em seguida para prosseguir a investigação!</p>
+            </div>
+
+            <div class="bg-yellow-50 p-2 border space-y-1">
+                <p class="font-bold text-red-800">⚠️ COMO REGISTRAR PROVAS NO HIPED.EXE:</p>
+                <p>1. Abra o aplicativo <strong>OBJETIVOS</strong> para ver a lista de e-mails/provas da fase.</p>
+                <p>2. Inspecione o e-mail no <strong>Jeff Mail</strong> e abra o anexo na ferramenta forense indicada.</p>
+                <p>3. Anote manualmente as respostas encontradas no terminal do aplicativo.</p>
+                <p>4. Abra o <strong>HIPED v6.0 Pro</strong> e digite os 4 campos manualmente.</p>
+            </div>
+
+            <p><strong>REGRAS DE ERRO E RESET BSOD:</strong><br>
+            - Digitar qualquer dado errado no HIPED aquece a CPU (+30°C) e corrompe o Kernel do Windows 95.<br>
+            - Ao atingir 100°C ou Kernel em 0%, ocorrerá a <strong>Tela Azul da Morte (BSOD)</strong>, resetando todo o jogo para o menu principal de Setup.</p>
+        </div>
+    </div>
+
+    <!-- WINDOWS 95 TASKBAR -->
+    <div class="h-9 win95-box flex justify-between items-center px-1 z-40 select-none relative">
+        <div class="flex items-center space-x-2">
+            <button onclick="toggleStartMenu()" class="win95-btn px-2 py-1 flex items-center space-x-1 text-xs font-bold">
+                <span class="bg-red-500 text-white px-1 text-[10px]">田</span>
+                <span>Iniciar</span>
+            </button>
+
+            <!-- Dynamic Active Task Buttons -->
+            <div id="taskbar-apps" class="flex space-x-1 overflow-x-auto max-w-[60vw]"></div>
+        </div>
+
+        <div class="win95-box-inset px-2 py-0.5 text-xs font-mono flex items-center space-x-2">
+            <span class="text-gray-800 font-bold" id="phase-tray-indicator">FASE 1 / 7</span>
+            <span>|</span>
+            <span id="win95-clock">11:42 PM</span>
+        </div>
+    </div>
+
+    <!-- START MENU POPUP -->
+    <div id="start-menu" class="win95-box absolute bottom-9 left-1 w-56 p-1 z-50 hidden shadow-2xl">
+        <div class="flex">
+            <div class="bg-gradient-to-t from-blue-950 to-blue-700 text-white font-bold w-6 flex items-end justify-center pb-2 tracking-widest text-xs" style="writing-mode: vertical-rl; transform: rotate(180deg);">
+                DONETRINO 95
+            </div>
+            <div class="flex-1 space-y-1 pl-1 text-xs">
+                <div onclick="openWindow('win-objectives'); toggleStartMenu();" class="p-1 hover:bg-blue-900 hover:text-white cursor-pointer flex items-center gap-2 font-bold text-yellow-900">🎯 Objetivos da Fase</div>
+                <div onclick="openWindow('win-readme'); toggleStartMenu();" class="p-1 hover:bg-blue-900 hover:text-white cursor-pointer flex items-center gap-2">📄 Como Jogar (COMO_JOGAR.TXT)</div>
+                <div onclick="openWindow('win-mail'); toggleStartMenu();" class="p-1 hover:bg-blue-900 hover:text-white cursor-pointer flex items-center gap-2">📧 Jeff Mail</div>
+                <div onclick="openWindow('win-hiped'); toggleStartMenu();" class="p-1 hover:bg-blue-900 hover:text-white cursor-pointer flex items-center gap-2">📊 HIPED v6.0 Pro</div>
+                <div onclick="openWindow('win-cmd'); toggleStartMenu();" class="p-1 hover:bg-blue-900 hover:text-white cursor-pointer flex items-center gap-2">💻 Prompt CMD</div>
+                <div onclick="openWindow('win-hex'); toggleStartMenu();" class="p-1 hover:bg-blue-900 hover:text-white cursor-pointer flex items-center gap-2">🔍 HexEdit 95</div>
+                <div onclick="openWindow('win-exif'); toggleStartMenu();" class="p-1 hover:bg-blue-900 hover:text-white cursor-pointer flex items-center gap-2">📷 ExifTool 95</div>
+                <div onclick="openWindow('win-pcap'); toggleStartMenu();" class="p-1 hover:bg-blue-900 hover:text-white cursor-pointer flex items-center gap-2">📡 Pcap Capture</div>
+                <div onclick="openWindow('win-john'); toggleStartMenu();" class="p-1 hover:bg-blue-900 hover:text-white cursor-pointer flex items-center gap-2">🔑 John the Ripper</div>
+                <div onclick="openWindow('win-stego'); toggleStartMenu();" class="p-1 hover:bg-blue-900 hover:text-white cursor-pointer flex items-center gap-2">👁️ StegoLab 95</div>
+                <div onclick="openWindow('win-cross'); toggleStartMenu();" class="p-1 hover:bg-blue-900 hover:text-white cursor-pointer flex items-center gap-2">⚖️ CrossVal 95</div>
+                <div onclick="openWindow('win-browser'); toggleStartMenu();" class="p-1 hover:bg-blue-900 hover:text-white cursor-pointer flex items-center gap-2">🌐 Netscape Intranet</div>
+                <hr class="border-gray-400 my-1">
+                <div onclick="location.reload()" class="p-1 hover:bg-blue-900 hover:text-white cursor-pointer flex items-center gap-2 font-bold text-red-800">💻 Desligar Sistema...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FATAL BSOD OVERLAY -->
+    <div id="bsod-screen" class="fixed inset-0 bg-[#0000aa] text-white z-50 p-8 font-mono hidden select-text">
+        <div class="max-w-3xl mx-auto space-y-4">
+            <div class="bg-white text-[#0000aa] px-2 py-0.5 inline-block font-bold">Windows 95 Fatal Error</div>
+            <p>Um erro fatal 0E ocorreu em 0028:C0011E36 no módulo DONETRINO_PERICIA_KERNEL(01).</p>
+            <p>* A submissão de dados incorretos no HIPED causou sobreaquecimento da CPU e corrupção irrecuperável do sistema.</p>
+            
+            <div class="border border-white p-4 bg-blue-950 space-y-2 text-xs">
+                <p class="text-yellow-300 font-bold" id="bsod-cause-msg">CAUSA: DADOS_DIVERGENTES_SUBMETIDOS_AO_HIPED</p>
+                <p>INQUÉRITO PERICIAL ABORTADO. RETORNANDO AO MENU PRINCIPAL E RESETANDO O SISTEMA...</p>
+            </div>
+
+            <div class="pt-6">
+                <button onclick="restartGameToMenuFromBSOD()" class="win95-btn px-6 py-2 bg-yellow-300 text-black font-bold hover:bg-yellow-200 text-sm">REINICIAR PERÍCIA [MENU PRINCIPAL] ➔</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VICTORY SCREEN -->
+    <div id="victory-screen" class="fixed inset-0 bg-black/95 text-green-400 z-50 p-8 font-mono hidden flex flex-col justify-between border-4 border-green-500">
+        <div class="max-w-3xl mx-auto space-y-4">
+            <div class="bg-green-500 text-black px-3 py-1 inline-block font-bold text-xl">DOSSIÊ PERICIAL COMPLETO E ENVIADO AO MINISTÉRIO DA JUSTIÇA</div>
+            <p class="text-2xl font-bold text-yellow-300">POLÍCIA FEDERAL - OPERAÇÃO DONETRINO CONCLUÍDA</p>
+            <p class="text-sm">Parabéns, Perito! Você auditou com rigor todas as 7 fases complexas, desvendando códigos, metadados GPS, capturas PCAP, senhas e esteganografias e submetendo cada prova ao HIPED v6.0 Pro!</p>
+
+            <div class="win95-box p-4 bg-green-950 text-white text-xs space-y-2 border border-green-600">
+                <p class="font-bold text-green-300">RESULTADOS DA INVESTIGAÇÃO:</p>
+                <p>✔ Provas digitais de sabotagem estatal formalmente validadas.</p>
+                <p>✔ Cúmplices políticos e executivos de tecnologia indiciados.</p>
+                <p>✔ O backdoor no Donetrino OS foi desativado com sucesso.</p>
+            </div>
+        </div>
+
+        <div class="flex justify-center pt-4">
+            <button onclick="location.reload()" class="win95-btn px-8 py-3 bg-green-500 text-black font-bold text-base hover:bg-green-400">JOGAR NOVAMENTE [REINICIAR]</button>
+        </div>
+    </div>
+
+    <script>
+        // WEB AUDIO API SOUND SYNTHESIZER
+        let audioCtx = null;
+        let audioEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioEnabled) return;
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(400, now + 0.05);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'radio') {
+                    // Walkie-Talkie Radio Chirp Sound
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(1200, now);
+                    osc.frequency.setValueAtTime(1800, now + 0.08);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'win95_boot') {
+                    [261.63, 329.63, 392.00, 523.25].forEach((freq, i) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.type = 'triangle';
+                        o.frequency.setValueAtTime(freq, now + i * 0.1);
+                        g.gain.setValueAtTime(0.12, now + i * 0.1);
+                        g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.5);
+                        o.start(now + i * 0.1);
+                        o.stop(now + i * 0.1 + 0.5);
+                    });
+                } else if (type === 'bsod') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.linearRampToValueAtTime(40, now + 0.4);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'floppy') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.setValueAtTime(600, now + 0.05);
+                    osc.frequency.setValueAtTime(300, now + 0.1);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                }
+            } catch(e) { console.error("Audio error:", e); }
+        }
+
+        // GAME STATE
+        let gameState = {
+            currentPhase: 1,
+            kernelHealth: 100,
+            cpuTemp: 40,
+            hipedAcceptedEvidences: new Set(),
+            selectedMailId: null,
+            selectedClusterSector: null,
+            crackedJohnResult: null,
+            timerId: null,
+            crtActive: true,
+            policeDispatchTargetWin: null
+        };
+
+        // FORENSIC PHASES DATABASE (7 DISTINCT PROGRESSIVE HARDCORE PHASES)
+        const phaseDatabase = {
+            1: {
+                title: "Auditoria de E-mails - Interceptação Inicial",
+                desc: "Examine as mensagens no Jeff Mail para obter os Hashes MD5 exatos e os Códigos de Ref. Digite cada uma das 3 provas manualmente no HIPED v6.0 Pro.",
+                neededHiped: 3,
+                checklist: [
+                    { id: "M1_1", label: "E-mail M1_1: Inspecione o anexo PAC_LIBERACAO.DAT para extrair o Hash MD5 e o Código de Ref. Digite no HIPED com Tipo EMAIL." },
+                    { id: "M1_2", label: "E-mail M1_2: Inspecione o anexo BK_SRV_95.BIN para extrair o Hash MD5 e o Código de Ref. Digite no HIPED com Tipo EMAIL." },
+                    { id: "M1_3", label: "E-mail M1_3: Inspecione o anexo SUPERKEY_PRIV.KEY para extrair o Hash MD5 e o Código de Ref. Digite no HIPED com Tipo EMAIL." }
+                ],
+                mails: [
+                    {
+                        id: "M1_1",
+                        subject: "Ajuste na Infraestrutura Donetrino",
+                        from: "jeff@donetrino-tech.org",
+                        to: "senador@gov.br",
+                        body: "Prezado Senador,\n\nConforme combinado, enviamos os módulos de controle. O Hash MD5 do pacote é 7E4A90B1.\nCódigo de Referência de Disco: GOV1995.\n\nAtenciosamente,\nJeff",
+                        attachment: "PAC_LIBERACAO.DAT",
+                        correctHiped: { type: "EMAIL", hash: "7E4A90B1", ref: "GOV1995" }
+                    },
+                    {
+                        id: "M1_2",
+                        subject: "Servidor de Backup do Ministério",
+                        from: "jeff@donetrino-tech.org",
+                        to: "tecnico@ministerio.gov.br",
+                        body: "Transferimos os arquivos criptografados. O Hash MD5 de auditoria é A3F8901C.\n\nCódigo de Ref.: BACKUP-95.",
+                        attachment: "BK_SRV_95.BIN",
+                        correctHiped: { type: "EMAIL", hash: "A3F8901C", ref: "BACKUP-95" }
+                    },
+                    {
+                        id: "M1_3",
+                        subject: "Confirmação de Chave Privilegiada",
+                        from: "jeff@donetrino-tech.org",
+                        to: "presidente_comissao@senado.gov.br",
+                        body: "Autenticação urgente da chave de superusuário do Donetrino OS.\nHash MD5 de validação: C11029FA.\n\nRef.: PRIV-SENATE.",
+                        attachment: "SUPERKEY_PRIV.KEY",
+                        correctHiped: { type: "EMAIL", hash: "C11029FA", ref: "PRIV-SENATE" }
+                    }
+                ]
+            },
+            2: {
+                title: "Análise Metadados EXIF e GPS (ExifTool 95)",
+                desc: "Abra o ExifTool 95 para examinar as imagens JPEG e extrair as coordenadas GPS exatas. Consulte o e-mail no Jeff Mail para obter o código de referência e digite manualmente no HIPED.",
+                neededHiped: 3,
+                checklist: [
+                    { id: "M2_1", label: "E-mail M2_1: Analise o anexo ENCONTRO_1995.JPG no ExifTool. Descubra as coordenadas GPS e o Ref do e-mail. Digite no HIPED com Tipo EXIF." },
+                    { id: "M2_2", label: "E-mail M2_2: Analise o anexo DOCK_SP_95.JPG no ExifTool. Descubra as coordenadas GPS e o Ref do e-mail. Digite no HIPED com Tipo EXIF." },
+                    { id: "M2_3", label: "E-mail M2_3: Analise o anexo NODE_DC.JPG no ExifTool. Descubra as coordenadas GPS e o Ref do e-mail. Digite no HIPED com Tipo EXIF." }
+                ],
+                mails: [
+                    {
+                        id: "M2_1",
+                        subject: "Reunião Clandestina - Foto 1 (Alpes)",
+                        from: "jeff@donetrino-tech.org",
+                        to: "operador_x@darknode.net",
+                        body: "Fotografia do local de encontro nos Alpes. Abra o anexo no ExifTool 95 para obter as coordenadas GPS.\n\nRef. de Disco: SWISS-95.",
+                        attachment: "ENCONTRO_1995.JPG",
+                        correctHiped: { type: "EXIF", hash: "46.2044N-06.1432E", ref: "SWISS-95" },
+                        exifData: { file: "ENCONTRO_1995.JPG", camera: "Canon EOS Digital 1995", gps: "46.2044N-06.1432E", comment: "Servidor underground nos Alpes" }
+                    },
+                    {
+                        id: "M2_2",
+                        subject: "Galpão Clandestino de Distribuição",
+                        from: "jeff@donetrino-tech.org",
+                        to: "logistica@donetrino-tech.org",
+                        body: "Foto do galpão de entrega. Extraia a localização GPS no ExifTool 95.\n\nRef.: SP-DOCK.",
+                        attachment: "DOCK_SP_95.JPG",
+                        correctHiped: { type: "EXIF", hash: "-23.5505S-46.6333W", ref: "SP-DOCK" },
+                        exifData: { file: "DOCK_SP_95.JPG", camera: "Nikon D1 1995 Prototype", gps: "-23.5505S-46.6333W", comment: "Armazém no Porto de Santos" }
+                    },
+                    {
+                        id: "M2_3",
+                        subject: "Terminal do Servidor Central Internacional",
+                        from: "jeff@donetrino-tech.org",
+                        to: "contact@global-tech.org",
+                        body: "Registro fotográfico em Washington. Obtenha as coordenadas GPS no ExifTool 95.\n\nRef.: DC-NODE.",
+                        attachment: "NODE_DC.JPG",
+                        correctHiped: { type: "EXIF", hash: "38.8951N-77.0363W", ref: "DC-NODE" },
+                        exifData: { file: "NODE_DC.JPG", camera: "Kodak DCS 420 1995", gps: "38.8951N-77.0363W", comment: "Data center reservado" }
+                    }
+                ]
+            },
+            3: {
+                title: "Interceptação de Pacotes de Rede (PcapCapture)",
+                desc: "Abra o PcapCapture para reconstruir o tráfego de rede e ler os tokens passados nos cabeçalhos HTTP/TCP. Digite manualmente os tokens e referências no HIPED.",
+                neededHiped: 4,
+                checklist: [
+                    { id: "M3_1", label: "E-mail M3_1: Intercepte HTTP_STREAM_01.PCAP no PcapCapture. Descubra o Token e o Ref. Digite no HIPED com Tipo PCAP." },
+                    { id: "M3_2", label: "E-mail M3_2: Intercepte FTP_LOG_02.PCAP no PcapCapture. Descubra a Senha e o Ref. Digite no HIPED com Tipo PCAP." },
+                    { id: "M3_3", label: "E-mail M3_3: Intercepte SQL_INJECT_03.PCAP no PcapCapture. Descubra o Payload e o Ref. Digite no HIPED com Tipo PCAP." },
+                    { id: "M3_4", label: "E-mail M3_4: Intercepte TELNET_HS_04.PCAP no PcapCapture. Descubra a Key e o Ref. Digite no HIPED com Tipo PCAP." }
+                ],
+                mails: [
+                    {
+                        id: "M3_1",
+                        subject: "Instruções de Acesso HTTP POST",
+                        from: "jeff@donetrino-tech.org",
+                        to: "tecnico@provedor.net",
+                        body: "Acesse o tráfego no PcapCapture para extrair o token enviado via HTTP POST.\n\nCódigo de Ref.: NET-CAPTURE.",
+                        attachment: "HTTP_STREAM_01.PCAP",
+                        correctHiped: { type: "PCAP", hash: "TOKEN_AUTH_9582", ref: "NET-CAPTURE" },
+                        pcapData: { stream: "POST /login.cgi HTTP/1.1\r\nHost: 192.168.1.105\r\nUser-Agent: DonetrinoBrowser/1.0\r\n\r\nuser=admin&pass_hash=TOKEN_AUTH_9582&ref=NET-CAPTURE" }
+                    },
+                    {
+                        id: "M3_2",
+                        subject: "Sessão FTP Clandestina",
+                        from: "jeff@donetrino-tech.org",
+                        to: "ftp_admin@darknode.net",
+                        body: "Inspecione o arquivo PCAP no PcapCapture para capturar a senha do FTP.\n\nRef.: FTP-PORT21.",
+                        attachment: "FTP_LOG_02.PCAP",
+                        correctHiped: { type: "PCAP", hash: "FTP_PASS_SEC_95", ref: "FTP-PORT21" },
+                        pcapData: { stream: "220 Donetrino FTP Server Ready\r\nUSER anonymous\r\n331 Password required\r\nPASS FTP_PASS_SEC_95\r\n230 User logged in." }
+                    },
+                    {
+                        id: "M3_3",
+                        subject: "Disparo de Exploit SQL no Servidor",
+                        from: "jeff@donetrino-tech.org",
+                        to: "hacker@sabotage-group.org",
+                        body: "Anexo a captura de injeção no banco de dados. Abra no PcapCapture.\n\nRef.: SQL-ATTACK.",
+                        attachment: "SQL_INJECT_03.PCAP",
+                        correctHiped: { type: "PCAP", hash: "INJ_SQL_8810", ref: "SQL-ATTACK" },
+                        pcapData: { stream: "GET /query.php?id=1' UNION SELECT INJ_SQL_8810 FROM sys_users-- HTTP/1.1\r\nHost: db.senado.gov.br" }
+                    },
+                    {
+                        id: "M3_4",
+                        subject: "Handshake de Conexão Telnet",
+                        from: "jeff@donetrino-tech.org",
+                        to: "sysadmin@donetrino-tech.org",
+                        body: "Captura de login remoto Telnet. Abra no PcapCapture.\n\nRef.: TELNET-LOG.",
+                        attachment: "TELNET_HS_04.PCAP",
+                        correctHiped: { type: "PCAP", hash: "TELNET_KEY_7741", ref: "TELNET-LOG" },
+                        pcapData: { stream: "Telnet terminal session established.\r\nSESSION_TOKEN: TELNET_KEY_7741\r\nAccess granted to kernel console." }
+                    }
+                ]
+            },
+            4: {
+                title: "Ataque de Força Bruta em Hashes (John the Ripper)",
+                desc: "Copie o Hash de cada e-mail para o John the Ripper, selecione o dicionário adequado e rode o ataque. Anote a senha/PIN revelada e digite manualmente no HIPED com o Tipo HASH.",
+                neededHiped: 4,
+                checklist: [
+                    { id: "M4_1", label: "E-mail M4_1: Quebre o Hash no John the Ripper. Anote o PIN numérico e o Ref. Digite no HIPED com Tipo HASH." },
+                    { id: "M4_2", label: "E-mail M4_2: Quebre o Hash no John the Ripper. Anote a Senha e o Ref. Digite no HIPED com Tipo HASH." },
+                    { id: "M4_3", label: "E-mail M4_3: Quebre o Hash no John the Ripper. Anote o PIN e o Ref. Digite no HIPED com Tipo HASH." },
+                    { id: "M4_4", label: "E-mail M4_4: Quebre o Hash NTLM no John the Ripper. Anote a Senha e o Ref. Digite no HIPED com Tipo HASH." }
+                ],
+                mails: [
+                    {
+                        id: "M4_1",
+                        subject: "Chave de Acesso ao Cofre do Senado",
+                        from: "jeff@donetrino-tech.org",
+                        to: "membro_m@senado.gov.br",
+                        body: "O hash do PIN de segurança do cofre é 8D969EEF6ECAD3C29A3A629280E686CF (PIN numérico). Quebre a senha no John the Ripper.\n\nRef.: SENADO-PIN.",
+                        attachment: "PIN_HASH.MD5",
+                        correctHiped: { type: "HASH", hash: "1995", ref: "SENADO-PIN" },
+                        johnTarget: { hash: "8D969EEF6ECAD3C29A3A629280E686CF", crackedPin: "1995" }
+                    },
+                    {
+                        id: "M4_2",
+                        subject: "Senha do Terminal do Ministério",
+                        from: "jeff@donetrino-tech.org",
+                        to: "secretario@ministerio.gov.br",
+                        body: "Hash do login administrativo: 21232F297A57A5A743894A0E4A801FC3. Quebre no John the Ripper.\n\nRef.: MIN-PASS.",
+                        attachment: "ADMIN_HASH.MD5",
+                        correctHiped: { type: "HASH", hash: "ADMIN95", ref: "MIN-PASS" },
+                        johnTarget: { hash: "21232F297A57A5A743894A0E4A801FC3", crackedPin: "ADMIN95" }
+                    },
+                    {
+                        id: "M4_3",
+                        subject: "PIN do Cofre Bancário Clandestino",
+                        from: "jeff@donetrino-tech.org",
+                        to: "operador_financeiro@swiss.ch",
+                        body: "Hash de segurança da conta Suíça: 5F4DCC3B5AA765D61D8327DEB882CF99. Quebre o PIN numérico no John.\n\nRef.: BANK-KEY.",
+                        attachment: "BANK_PIN.MD5",
+                        correctHiped: { type: "HASH", hash: "7782", ref: "BANK-KEY" },
+                        johnTarget: { hash: "5F4DCC3B5AA765D61D8327DEB882CF99", crackedPin: "7782" }
+                    },
+                    {
+                        id: "M4_4",
+                        subject: "Hash NTLM de Conta do Jeff",
+                        from: "jeff@donetrino-tech.org",
+                        to: "root@donetrino-tech.org",
+                        body: "Hash NTLM do Windows 95: E58227923724B0E8FA361D4C6A4DF750. Quebre com o dicionário de politicos no John.\n\nRef.: NTLM-JEFF.",
+                        attachment: "JEFF_NTLM.HASH",
+                        correctHiped: { type: "HASH", hash: "JEFF_GOV_95", ref: "NTLM-JEFF" },
+                        johnTarget: { hash: "E58227923724B0E8FA361D4C6A4DF750", crackedPin: "JEFF_GOV_95" }
+                    }
+                ]
+            },
+            5: {
+                title: "Análise de Esteganografia LSB (StegoLab 95)",
+                desc: "Examine as imagens no StegoLab 95, ative o filtro BitPlane 0 (LSB) e leia o texto secreto revelado. Anote a frase e digite manualmente no HIPED com o Tipo STEGO.",
+                neededHiped: 5,
+                checklist: [
+                    { id: "M5_1", label: "E-mail M5_1: Examine DONETRINO_LOGO_STEGO.BMP no StegoLab (BitPlane 0). Digite a mensagem e o Ref no HIPED." },
+                    { id: "M5_2", label: "E-mail M5_2: Examine NETWORK_DIAGRAM.BMP no StegoLab (BitPlane 0). Digite a mensagem e o Ref no HIPED." },
+                    { id: "M5_3", label: "E-mail M5_3: Examine PRESS_PHOTO.BMP no StegoLab (BitPlane 0). Digite a mensagem e o Ref no HIPED." },
+                    { id: "M5_4", label: "E-mail M5_4: Examine GOV_STAMP.BMP no StegoLab (BitPlane 0). Digite a mensagem e o Ref no HIPED." },
+                    { id: "M5_5", label: "E-mail M5_5: Examine CHIP_SCHEMATIC.BMP no StegoLab (BitPlane 0). Digite a mensagem e o Ref no HIPED." }
+                ],
+                mails: [
+                    {
+                        id: "M5_1",
+                        subject: "Logotipo Donetrino Modificado",
+                        from: "jeff@donetrino-tech.org",
+                        to: "criador@tech-corp.org",
+                        body: "O logotipo oficial contém uma mensagem oculta no plano de bits 0. Use o StegoLab 95.\n\nRef.: STEGO-BIT0.",
+                        attachment: "DONETRINO_LOGO_STEGO.BMP",
+                        correctHiped: { type: "STEGO", hash: "SABOTAGE_PLAN_DELTA", ref: "STEGO-BIT0" },
+                        stegoText: "SABOTAGE_PLAN_DELTA"
+                    },
+                    {
+                        id: "M5_2",
+                        subject: "Diagrama de Rede e Servidores",
+                        from: "jeff@donetrino-tech.org",
+                        to: "tecnico_rede@donetrino-tech.org",
+                        body: "Diagrama com instruções de porta traseira ocultas no LSB. Examine no StegoLab.\n\nRef.: STEGO-NET.",
+                        attachment: "NETWORK_DIAGRAM.BMP",
+                        correctHiped: { type: "STEGO", hash: "BACKDOOR_PORT_666", ref: "STEGO-NET" },
+                        stegoText: "BACKDOOR_PORT_666"
+                    },
+                    {
+                        id: "M5_3",
+                        subject: "Foto Oficial de Imprensa",
+                        from: "jeff@donetrino-tech.org",
+                        to: "imprensa@gov.br",
+                        body: "Fotografia oficial com vetor de cifra esteganografado. Examine no StegoLab 95.\n\nRef.: STEGO-PRESS.",
+                        attachment: "PRESS_PHOTO.BMP",
+                        correctHiped: { type: "STEGO", hash: "CIPHER_VECTOR_99", ref: "STEGO-PRESS" },
+                        stegoText: "CIPHER_VECTOR_99"
+                    },
+                    {
+                        id: "M5_4",
+                        subject: "Selo de Garantia Governamental",
+                        from: "jeff@donetrino-tech.org",
+                        to: "auditoria@governo.gov.br",
+                        body: "Imagem com marca oculta de falsificação. Extraia o LSB no StegoLab.\n\nRef.: STEGO-SEAL.",
+                        attachment: "GOV_STAMP.BMP",
+                        correctHiped: { type: "STEGO", hash: "FORGED_STAMP_1995", ref: "STEGO-SEAL" },
+                        stegoText: "FORGED_STAMP_1995"
+                    },
+                    {
+                        id: "M5_5",
+                        subject: "Esquema Eletrônico do Microchip",
+                        from: "jeff@donetrino-tech.org",
+                        to: "engenharia@hardware-corp.com",
+                        body: "Esquema com código de exploit oculto. Use o StegoLab 95.\n\nRef.: STEGO-CHIP.",
+                        attachment: "CHIP_SCHEMATIC.BMP",
+                        correctHiped: { type: "STEGO", hash: "SILICON_EXPLOIT_X", ref: "STEGO-CHIP" },
+                        stegoText: "SILICON_EXPLOIT_X"
+                    }
+                ]
+            },
+            6: {
+                title: "Análise de Disquete & HexEdit (Disklab 95)",
+                desc: "Abra o Disklab 95 para recuperar os setores corrompidos do disquete, use o HexEdit para descriptografar os offsets com a chave e valide as divergências no CrossVal antes de digitar no HIPED.",
+                neededHiped: 5,
+                checklist: [
+                    { id: "M6_1", label: "E-mail M6_1: Recupere o setor 0x12 no Disklab, descriptografe no HexEdit e digite a assinatura no HIPED (Tipo HEX)." },
+                    { id: "M6_2", label: "E-mail M6_2: Recupere o setor 0x13 no Disklab, descriptografe no HexEdit e digite a assinatura no HIPED (Tipo HEX)." },
+                    { id: "M6_3", label: "E-mail M6_3: Recupere o setor 0x14 no Disklab, descriptografe no HexEdit e digite a assinatura no HIPED (Tipo HEX)." },
+                    { id: "M6_4", label: "E-mail M6_4: Recupere o setor 0x15 no Disklab, descriptografe no HexEdit e digite a assinatura no HIPED (Tipo HEX)." },
+                    { id: "M6_5", label: "E-mail M6_5: Recupere o setor 0x16 no Disklab, descriptografe no HexEdit e digite a assinatura no HIPED (Tipo HEX)." }
+                ],
+                mails: [
+                    {
+                        id: "M6_1",
+                        subject: "Declaração de Transação Bancária 1",
+                        from: "jeff@donetrino-tech.org",
+                        to: "conta_suica@bank.ch",
+                        body: "Verifique o setor corrompido 0x12 do disquete (Disklab 95) para obter a assinatura real.\n\nRef.: PGP-FAKE-95.",
+                        attachment: "BANCO_SUICA.DAT",
+                        correctHiped: { type: "HEX", hash: "BANK-ZURICH", ref: "PGP-FAKE-95" }
+                    },
+                    {
+                        id: "M6_2",
+                        subject: "Contrato Social de Empresa Fantasma",
+                        from: "jeff@donetrino-tech.org",
+                        to: "notario@cartorio.gov.br",
+                        body: "Inspecione o setor 0x13 do disquete e aplique a chave no HexEdit.\n\nRef.: CORRUPT-SEC02.",
+                        attachment: "CONTRATO_FANTASMA.DAT",
+                        correctHiped: { type: "HEX", hash: "CONTRACT_VOID_95", ref: "CORRUPT-SEC02" }
+                    },
+                    {
+                        id: "M6_3",
+                        subject: "Protocolo de Escuta Telefônica",
+                        from: "jeff@donetrino-tech.org",
+                        to: "telecom@operadora.net",
+                        body: "Recupere o setor 0x14 no Disklab 95 para desvendar a assinatura.\n\nRef.: DISK-SEC03.",
+                        attachment: "TELECOM_LOG.DAT",
+                        correctHiped: { type: "HEX", hash: "TELECOM_TAP_77", ref: "DISK-SEC03" }
+                    },
+                    {
+                        id: "M6_4",
+                        subject: "Registro de Imóvel Fictício",
+                        from: "jeff@donetrino-tech.org",
+                        to: "imoveis@offshore.com",
+                        body: "Recupere o setor 0x15 no Disklab 95 e descriptografe no HexEdit.\n\nRef.: LAND-REG.",
+                        attachment: "IMOVEL_OFFSHORE.DAT",
+                        correctHiped: { type: "HEX", hash: "ESTATE_DUMMY_88", ref: "LAND-REG" }
+                    },
+                    {
+                        id: "M6_5",
+                        subject: "Apólice de Seguro Fraudulenta",
+                        from: "jeff@donetrino-tech.org",
+                        to: "seguro@fraude.org",
+                        body: "Inspecione o setor 0x16 do disquete para extrair a validação.\n\nRef.: DISK-SEC05.",
+                        attachment: "APOLICE_FRAUDE.DAT",
+                        correctHiped: { type: "HEX", hash: "INSUR_SCAM_1995", ref: "DISK-SEC05" }
+                    }
+                ],
+                clusters: [
+                    { id: 18, isCorrupt: true, name: "DISK_SIGNATURE_1.DAT", content: "HASH_DISC: BANK-ZURICH | SIGNATURE: PGP-FAKE-95" },
+                    { id: 19, isCorrupt: true, name: "DISK_SIGNATURE_2.DAT", content: "HASH_DISC: CONTRACT_VOID_95 | SIGNATURE: CORRUPT-SEC02" },
+                    { id: 20, isCorrupt: true, name: "DISK_SIGNATURE_3.DAT", content: "HASH_DISC: TELECOM_TAP_77 | SIGNATURE: DISK-SEC03" },
+                    { id: 21, isCorrupt: true, name: "DISK_SIGNATURE_4.DAT", content: "HASH_DISC: ESTATE_DUMMY_88 | SIGNATURE: LAND-REG" },
+                    { id: 22, isCorrupt: true, name: "DISK_SIGNATURE_5.DAT", content: "HASH_DISC: INSUR_SCAM_1995 | SIGNATURE: DISK-SEC05" }
+                ]
+            },
+            7: {
+                title: "Perícia Final - Descriptografia Multi-Especialidade Mestre",
+                desc: "O DESAFIO FINAL! Jeff espalhou as provas por 6 ferramentas diferentes. Utilize Netscape Intranet, PcapCapture, ExifTool, StegoLab, HexEdit e CrossVal para obter todas as 6 respostas e submetê-las ao HIPED!",
+                neededHiped: 6,
+                checklist: [
+                    { id: "M7_1", label: "E-mail M7_1: Acesse os logs no Netscape Intranet para encontrar a Chave Master de Desativação e digite no HIPED." },
+                    { id: "M7_2", label: "E-mail M7_2: Intercepte NETSCAPE_ROOT.PCAP no PcapCapture para descobrir o User Token Root e digite no HIPED." },
+                    { id: "M7_3", label: "E-mail M7_3: Analise HQ_LONDON.JPG no ExifTool 95 para obter o GPS do QG em Londres e digite no HIPED." },
+                    { id: "M7_4", label: "E-mail M7_4: Examine MASTER_LICENSE.BMP no StegoLab 95 (BitPlane 0) e digite a licença mestre no HIPED." },
+                    { id: "M7_5", label: "E-mail M7_5: Descriptografe WIN95_REGISTRY.DAT no HexEdit e digite o offset no HIPED." },
+                    { id: "M7_6", label: "E-mail M7_6: Inspecione o selo policial final no Jeff Mail e valide no HIPED." }
+                ],
+                mails: [
+                    {
+                        id: "M7_1",
+                        subject: "Último Comando - Destruição do Kernel",
+                        from: "jeff@donetrino-tech.org",
+                        to: "all@donetrino-network.org",
+                        body: "A chave mestre do Backdoor está nos logs do Netscape Intranet.\n\nRef.: OMEGA-KEY.",
+                        attachment: "CORE_BACKDOOR_KEY.BIN",
+                        correctHiped: { type: "HASH", hash: "DONETRINO_KILL_SWITCH_1995", ref: "OMEGA-KEY" }
+                    },
+                    {
+                        id: "M7_2",
+                        subject: "Log de Acesso de Super-Usuário Root",
+                        from: "jeff@donetrino-tech.org",
+                        to: "root@governo.gov.br",
+                        body: "Interceptamos a credencial root no PcapCapture.\n\nRef.: INTRANET-LOG1.",
+                        attachment: "NETSCAPE_ROOT.PCAP",
+                        correctHiped: { type: "PCAP", hash: "NETSCAPE_ROOT_USR", ref: "INTRANET-LOG1" },
+                        pcapData: { stream: "CONNECT intranet.senado.gov.br:443\r\nUSER_TOKEN: NETSCAPE_ROOT_USR\r\nAuth Level: Root Master" }
+                    },
+                    {
+                        id: "M7_3",
+                        subject: "Localização Exata do Servidor Central Mestre",
+                        from: "jeff@donetrino-tech.org",
+                        to: "agente_london@darknode.net",
+                        body: "Fotografia do data center principal em Londres. Obtenha o GPS no ExifTool 95.\n\nRef.: LONDON-CORE.",
+                        attachment: "HQ_LONDON.JPG",
+                        correctHiped: { type: "EXIF", hash: "51.5074N-0.1278W", ref: "LONDON-CORE" },
+                        exifData: { file: "HQ_LONDON.JPG", camera: "Leica Digital 1995", gps: "51.5074N-0.1278W", comment: "Bunker Subterrâneo em Londres" }
+                    },
+                    {
+                        id: "M7_4",
+                        subject: "Licença Mestre Esteganografada",
+                        from: "jeff@donetrino-tech.org",
+                        to: "licensing@donetrino-tech.org",
+                        body: "Selo com assinatura LSB no plano 0. Use o StegoLab 95.\n\nRef.: STEGO-FINAL.",
+                        attachment: "MASTER_LICENSE.BMP",
+                        correctHiped: { type: "STEGO", hash: "MASTER_LICENSE_CRACKED", ref: "STEGO-FINAL" },
+                        stegoText: "MASTER_LICENSE_CRACKED"
+                    },
+                    {
+                        id: "M7_5",
+                        subject: "Registro Criptografado do Windows 95",
+                        from: "jeff@donetrino-tech.org",
+                        to: "sysedit@microsoft-corp.com",
+                        body: "Aplique a chave no HexEdit 95 para desvendar o offset.\n\nRef.: HEX-REG7.",
+                        attachment: "WIN95_REGISTRY.DAT",
+                        correctHiped: { type: "HEX", hash: "REGISTRY_PURGE_OK", ref: "HEX-REG7" }
+                    },
+                    {
+                        id: "M7_6",
+                        subject: "Selo Final da Perícia da Polícia Federal",
+                        from: "jeff@donetrino-tech.org",
+                        to: "ministro@justica.gov.br",
+                        body: "Confirmação do encerramento do inquérito policial.\n\nRef.: FINAL-SEAL.",
+                        attachment: "SEAL_DOSSIER.DAT",
+                        correctHiped: { type: "EMAIL", hash: "DOSSIER_POLICE_SEAL_95", ref: "FINAL-SEAL" }
+                    }
+                ],
+                browserPage: { title: "LOGS DO SISTEMA DE CONTROLE OMEGA (1995)", content: "Log 0xFA: Chave Master de Desativação do Backdoor = DONETRINO_KILL_SWITCH_1995 [Ref: OMEGA-KEY]" }
+            }
+        };
+
+        // POLICE RADIO DISPATCH SYSTEM - NO DIRECT ANSWER SPOILERS
+        function triggerPoliceDispatch(messageText, targetWindowId = null) {
+            playSound('radio');
+            const modal = document.getElementById('police-dispatch-modal');
+            const body = document.getElementById('police-dispatch-body');
+            const btn = document.getElementById('police-dispatch-btn');
+
+            gameState.policeDispatchTargetWin = targetWindowId;
+
+            body.innerHTML = messageText;
+            
+            if (targetWindowId) {
+                btn.innerText = "ENTENDIDO! [IR PARA O PROGRAMA ➔]";
+            } else {
+                btn.innerText = "ENTENDIDO!";
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closePoliceDispatch() {
+            playSound('click');
+            document.getElementById('police-dispatch-modal').classList.add('hidden');
+            if (gameState.policeDispatchTargetWin) {
+                openWindow(gameState.policeDispatchTargetWin);
+                gameState.policeDispatchTargetWin = null;
+            }
+        }
+
+        // WINDOW MANAGEMENT LOGIC
+        function openWindow(id) {
+            playSound('click');
+            const win = document.getElementById(id);
+            if (win) {
+                win.classList.remove('hidden');
+                document.querySelectorAll('.win95-box.absolute').forEach(w => w.style.zIndex = '20');
+                win.style.zIndex = '30';
+                updateTaskbar();
+            }
+        }
+
+        function closeWindow(id) {
+            playSound('click');
+            const win = document.getElementById(id);
+            if (win) {
+                win.classList.add('hidden');
+                updateTaskbar();
+            }
+        }
+
+        function toggleStartMenu() {
+            playSound('click');
+            const menu = document.getElementById('start-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        function updateTaskbar() {
+            const container = document.getElementById('taskbar-apps');
+            container.innerHTML = '';
+
+            const apps = [
+                { id: 'win-objectives', name: 'Objetivos' },
+                { id: 'win-readme', name: 'Como Jogar' },
+                { id: 'win-mail', name: 'Jeff Mail' },
+                { id: 'win-hiped', name: 'HIPED.EXE' },
+                { id: 'win-cmd', name: 'CMD' },
+                { id: 'win-hex', name: 'HexEdit' },
+                { id: 'win-exif', name: 'ExifTool' },
+                { id: 'win-pcap', name: 'Pcap' },
+                { id: 'win-john', name: 'John' },
+                { id: 'win-stego', name: 'Stego' },
+                { id: 'win-cross', name: 'CrossVal' },
+                { id: 'win-browser', name: 'Netscape' },
+                { id: 'win-disk', name: 'Disklab' },
+                { id: 'win-sys', name: 'BSOD Shield' }
+            ];
+
+            apps.forEach(app => {
+                const winEl = document.getElementById(app.id);
+                if (winEl && !winEl.classList.contains('hidden')) {
+                    const btn = document.createElement('button');
+                    btn.className = 'win95-btn px-2 py-0.5 text-xs font-bold bg-gray-200 border text-blue-900 truncate max-w-[90px]';
+                    btn.innerText = app.name;
+                    btn.onclick = () => openWindow(app.id);
+                    container.appendChild(btn);
+                }
+            });
+        }
+
+        // GAME CONTROLLER
+        function startGame() {
+            playSound('win95_boot');
+            document.getElementById('main-menu-overlay').classList.add('hidden');
+            loadPhase(1);
+            startHardwareTick();
+            openWindow('win-objectives');
+        }
+
+        function toggleMenuOptions() {
+            playSound('click');
+            document.getElementById('menu-options-panel').classList.toggle('hidden');
+        }
+
+        function toggleCRTMenu() {
+            playSound('click');
+            gameState.crtActive = !gameState.crtActive;
+            const container = document.getElementById('body-container');
+            const btn = document.getElementById('crt-toggle-btn');
+            if (gameState.crtActive) {
+                container.classList.add('crt');
+                btn.innerText = 'ATIVADO';
+            } else {
+                container.classList.remove('crt');
+                btn.innerText = 'DESATIVADO';
+            }
+        }
+
+        function toggleAudioMenu() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('audio-toggle-btn').innerText = audioEnabled ? 'ON' : 'OFF';
+            if (audioEnabled) playSound('click');
+        }
+
+        function loadPhase(phaseNum) {
+            gameState.currentPhase = phaseNum;
+            gameState.hipedAcceptedEvidences.clear();
+            gameState.selectedMailId = null;
+            gameState.selectedClusterSector = null;
+            gameState.crackedJohnResult = null;
+
+            document.getElementById('phase-tray-indicator').innerText = `FASE ${phaseNum} / 7`;
+            document.getElementById('mail-phase-tag').innerText = `FASE ${phaseNum}`;
+
+            const phaseInfo = phaseDatabase[phaseNum];
+            const consoleLog = document.getElementById('hiped-log-console');
+            consoleLog.innerHTML = `<div>[INICIANDO FASE ${phaseNum}]: ${phaseInfo.title}</div>`;
+            consoleLog.innerHTML += `<div>[EXIGÊNCIA]: Submeta as ${phaseInfo.neededHiped} evidências digitando os campos manualmente.</div>`;
+            
+            updateObjectivesPanel(phaseInfo);
+            updateHipedProgress();
+            renderMailList();
+            renderClusterGrid();
+            drawStegoCanvas();
+
+            // Initial Radio Dispatch for new phase
+            triggerPoliceDispatch(`Perito, iniciamos a <strong>FASE ${phaseNum}: ${phaseInfo.title}</strong>!<br><br>Abra o <strong>Jeff Mail</strong> para inspecionar os e-mails e anexos desta fase.`, 'win-mail');
+        }
+
+        function updateObjectivesPanel(phaseInfo) {
+            document.getElementById('obj-phase-title').innerText = `FASE ${gameState.currentPhase}: ${phaseInfo.title.toUpperCase()}`;
+            document.getElementById('obj-phase-tag').innerText = `${phaseInfo.neededHiped} EVIDÊNCIAS REQUERIDAS`;
+            document.getElementById('obj-phase-desc').innerText = phaseInfo.desc;
+
+            const list = document.getElementById('obj-checklist');
+            list.innerHTML = '';
+            
+            let completedCount = 0;
+
+            phaseInfo.checklist.forEach(item => {
+                const isDone = gameState.hipedAcceptedEvidences.has(item.id);
+                if (isDone) completedCount++;
+
+                const d = document.createElement('div');
+                d.className = `p-1.5 border rounded flex items-start gap-2 ${
+                    isDone ? 'bg-green-100 border-green-500 text-green-900 font-bold' : 'bg-white border-gray-300 text-gray-800'
+                }`;
+                d.innerHTML = `
+                    <span class="${isDone ? 'text-green-600 font-bold' : 'text-yellow-600 font-bold'}">${isDone ? '✔ [OK]' : '⏳ [PENDENTE]'}</span>
+                    <span>${item.label}</span>
+                `;
+                list.appendChild(d);
+            });
+
+            document.getElementById('obj-count-badge').innerText = `${completedCount} / ${phaseInfo.neededHiped} CONCLUÍDOS`;
+        }
+
+        // MAIL APP LOGIC
+        function renderMailList() {
+            const container = document.getElementById('mail-list-container');
+            container.innerHTML = '';
+            const phase = phaseDatabase[gameState.currentPhase];
+
+            phase.mails.forEach(m => {
+                const item = document.createElement('div');
+                const isAccepted = gameState.hipedAcceptedEvidences.has(m.id);
+                item.className = `p-1.5 border border-gray-400 cursor-pointer hover:bg-blue-100 text-xs flex flex-col space-y-0.5 ${
+                    gameState.selectedMailId === m.id ? 'bg-blue-200 font-bold' : 'bg-white'
+                }`;
+                item.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="truncate font-bold text-blue-900">${m.subject}</span>
+                        ${isAccepted ? '<span class="text-[10px] bg-green-200 text-green-950 px-1 border border-green-600">VALIDADO</span>' : ''}
+                    </div>
+                    <span class="text-[10px] text-gray-600 truncate">De: ${m.from} (${m.id})</span>
+                `;
+                item.onclick = () => selectMail(m);
+                container.appendChild(item);
+            });
+        }
+
+        function selectMail(m) {
+            playSound('click');
+            gameState.selectedMailId = m.id;
+            renderMailList();
+
+            const pane = document.getElementById('mail-reader-content');
+            pane.innerHTML = `
+                <div class="border-b pb-2 space-y-1">
+                    <div><strong>ID DE EVIDÊNCIA:</strong> <span class="text-blue-900 font-bold">${m.id}</span></div>
+                    <div><strong>ASSUNTO:</strong> ${m.subject}</div>
+                    <div><strong>DE:</strong> ${m.from}</div>
+                    <div><strong>PARA:</strong> ${m.to}</div>
+                </div>
+                <div class="pt-2 text-gray-900 leading-relaxed font-mono whitespace-pre-wrap">${m.body}</div>
+            `;
+
+            const quickBox = document.getElementById('mail-quick-actions');
+            const attachInfo = document.getElementById('mail-attachment-info');
+
+            if (m.attachment) {
+                quickBox.classList.remove('hidden');
+                attachInfo.innerText = m.attachment;
+            } else {
+                quickBox.classList.add('hidden');
+            }
+
+            // Populate CrossVal Side A automatically
+            document.getElementById('cross-side-a').innerHTML = `
+                <div><strong>ID E-mail:</strong> ${m.id}</div>
+                <div><strong>Assunto:</strong> ${m.subject}</div>
+                <div><strong>Declaração Hash:</strong> ${m.correctHiped.hash}</div>
+                <div><strong>Ref Esperada:</strong> ${m.correctHiped.ref}</div>
+            `;
+        }
+
+        function refreshMailInbox() {
+            playSound('click');
+            renderMailList();
+        }
+
+        // STRICT MANUAL HIPED SUBMISSION LOGIC
+        function submitHipedManual() {
+            const type = document.getElementById('hiped-input-type').value;
+            const id = document.getElementById('hiped-input-id').value.trim().toUpperCase();
+            const hash = document.getElementById('hiped-input-hash').value.trim().toUpperCase();
+            const ref = document.getElementById('hiped-input-ref').value.trim().toUpperCase();
+
+            const phase = phaseDatabase[gameState.currentPhase];
+            const targetMail = phase.mails.find(m => m.id === id);
+
+            const consoleLog = document.getElementById('hiped-log-console');
+
+            if (targetMail && 
+                targetMail.correctHiped.type === type &&
+                targetMail.correctHiped.hash.toUpperCase() === hash &&
+                targetMail.correctHiped.ref.toUpperCase() === ref) {
+
+                playSound('win95_boot');
+                gameState.hipedAcceptedEvidences.add(id);
+                consoleLog.innerHTML += `<div class="text-yellow-300">[VALIDAÇÃO SUCESSO]: Prova ${id} aceita e registrada!</div>`;
+                consoleLog.scrollTop = consoleLog.scrollHeight;
+
+                updateHipedProgress();
+                updateObjectivesPanel(phase);
+                renderMailList();
+
+                const remaining = phase.neededHiped - gameState.hipedAcceptedEvidences.size;
+                if (remaining > 0) {
+                    triggerPoliceDispatch(`Muito bom, Perito! Prova <strong>${id}</strong> validada com sucesso no HIPED.<br><br>Faltam <strong>${remaining}</strong> prova(s) para concluir esta fase! Continue auditando os outros e-mails no <strong>Jeff Mail</strong>.`, 'win-mail');
+                } else {
+                    triggerPoliceDispatch(`PARABÉNS! Todas as <strong>${phase.neededHiped}</strong> provas da Fase ${gameState.currentPhase} foram registradas!<br><br>Clique em <strong>'CONCLUIR FASE & AVANÇAR'</strong> no HIPED v6.0 para progredir!`, 'win-hiped');
+                }
+            } else {
+                playSound('bsod');
+                consoleLog.innerHTML += `<div class="text-red-400 font-bold">[ERRO GRAVE]: Submissão ${id} REJEITADA por dados incorretos! (+30°C CPU / -20% Kernel)</div>`;
+                consoleLog.scrollTop = consoleLog.scrollHeight;
+
+                // Heavy Penalty for wrong manual submission
+                gameState.cpuTemp += 30;
+                gameState.kernelHealth -= 20;
+
+                if (gameState.cpuTemp >= 100 || gameState.kernelHealth <= 0) {
+                    triggerBSOD("PERÍCIA_FALHADA_SUBMISSAO_HIPED_INVALIDA");
+                } else {
+                    triggerPoliceDispatch(`⚠️ <strong>ATENÇÃO PERITO!</strong> Os dados digitados para <strong>${id || 'PROVA'}</strong> estavam incorretos!<br><br>A CPU aqueceu +30°C. Confira os valores exatos nas telas dos programas forenses e digite com atenção!`, 'win-hiped');
+                }
+            }
+        }
+
+        function updateHipedProgress() {
+            const phase = phaseDatabase[gameState.currentPhase];
+            const count = gameState.hipedAcceptedEvidences.size;
+            const needed = phase.neededHiped;
+            const percent = Math.min(100, Math.floor((count / needed) * 100));
+
+            document.getElementById('hiped-progress-text').innerText = `${count} / ${needed} (${percent}%)`;
+            document.getElementById('hiped-progress-bar').style.width = `${percent}%`;
+        }
+
+        function verifyPhaseCompletion() {
+            const phase = phaseDatabase[gameState.currentPhase];
+            if (gameState.hipedAcceptedEvidences.size >= phase.neededHiped) {
+                playSound('win95_boot');
+                if (gameState.currentPhase < 7) {
+                    alert(`FASE ${gameState.currentPhase} CONCLUÍDA COM SUCESSO!\n\nTodas as ${phase.neededHiped} evidências foram validadas no HIPED. Avançando para a Fase ${gameState.currentPhase + 1}...`);
+                    loadPhase(gameState.currentPhase + 1);
+                } else {
+                    document.getElementById('victory-screen').classList.remove('hidden');
+                }
+            } else {
+                playSound('bsod');
+                alert(`FASE INCOMPLETA!\n\nO HIPED.EXE exige mais ${phase.neededHiped - gameState.hipedAcceptedEvidences.size} evidência(s) válidas registradas nesta fase.`);
+            }
+        }
+
+        // TOOL 1: EXIFTOOL LOGIC
+        function scanExifImage() {
+            playSound('click');
+            const res = document.getElementById('exif-results');
+            const badge = document.getElementById('exif-coords-badge');
+            const phase = phaseDatabase[gameState.currentPhase];
+
+            const mail = phase.mails.find(m => m.id === gameState.selectedMailId) || phase.mails.find(m => m.exifData);
+
+            if (mail && mail.exifData) {
+                res.innerHTML = `
+                    <div>[EXIF METADATA FOUND]: ${mail.exifData.file} (${mail.id})</div>
+                    <div>CAMERA: ${mail.exifData.camera}</div>
+                    <div class="text-yellow-300">GPS TAG: ${mail.exifData.gps}</div>
+                    <div class="text-cyan-300">COMMENT: ${mail.exifData.comment}</div>
+                `;
+                badge.innerText = `GPS: ${mail.exifData.gps}`;
+
+                triggerPoliceDispatch(`Excelente trabalho, Perito! Os metadados GPS foram extraídos na tela do ExifTool.<br><br>Agora abra o <strong>Jeff Mail</strong> para encontrar a Referência do e-mail correspondente e depois digite os dados no <strong>HIPED v6.0 Pro</strong>!`, 'win-hiped');
+            } else {
+                res.innerHTML = `<div>[EXIFTOOL]: Selecione um e-mail com anexo JPEG nesta fase.</div>`;
+                badge.innerText = "GPS: NENHUMA TAG EXTRAÍDA";
+            }
+        }
+
+        // TOOL 2: PCAP WIRESHARK LITE LOGIC
+        function loadPcapStream() {
+            playSound('click');
+            const list = document.getElementById('pcap-packet-list');
+            const payload = document.getElementById('pcap-payload-content');
+            const phase = phaseDatabase[gameState.currentPhase];
+
+            const mail = phase.mails.find(m => m.id === gameState.selectedMailId) || phase.mails.find(m => m.pcapData);
+
+            if (mail && mail.pcapData) {
+                list.innerHTML = `
+                    <div class="p-1 hover:bg-blue-900 cursor-pointer bg-blue-950 font-bold border-b border-gray-700">
+                        [PKT #1042 - ${mail.id}] TCP/HTTP POST -> 192.168.1.105:80 (LEN 128)
+                    </div>
+                `;
+                payload.innerText = mail.pcapData.stream;
+
+                triggerPoliceDispatch(`Excelente, Perito! O tráfego de rede foi capturado e exibido na tela.<br><br>Observe o token no payload, consulte a Referência de Disco no Jeff Mail e registre a evidência no <strong>HIPED v6.0 Pro</strong>!`, 'win-hiped');
+            } else {
+                list.innerHTML = `<div>[PCAP]: Selecione um e-mail com anexo PCAP para interceptar o fluxo.</div>`;
+                payload.innerText = "Nenhum payload HTTP/TCP interceptado.";
+            }
+        }
+
+        // TOOL 3: JOHN THE RIPPER LOGIC
+        function clearJohnTarget() {
+            playSound('click');
+            document.getElementById('john-target-hash').innerText = "NENHUM HASH CARREGADO";
+            document.getElementById('john-result-output').innerText = "Aguardando início do ataque...";
+        }
+
+        function runJohnRipper() {
+            playSound('click');
+            const targetEl = document.getElementById('john-target-hash');
+            const out = document.getElementById('john-result-output');
+            const phase = phaseDatabase[gameState.currentPhase];
+
+            const mail = phase.mails.find(m => m.id === gameState.selectedMailId) || phase.mails.find(m => m.johnTarget);
+
+            if (mail && mail.johnTarget) {
+                targetEl.innerText = mail.johnTarget.hash;
+                out.innerHTML = `<div>Iniciando ataque de dicionário no hash do e-mail ${mail.id}...</div>`;
+                
+                setTimeout(() => {
+                    playSound('win95_boot');
+                    gameState.crackedJohnResult = mail.johnTarget.crackedPin;
+                    out.innerHTML += `<div class="text-yellow-300 font-bold">[HASH CRACKED SUCCESS]: ${mail.johnTarget.hash} = ${mail.johnTarget.crackedPin}</div>`;
+
+                    triggerPoliceDispatch(`Ótimo trabalho, Perito! A senha foi quebrada no John the Ripper.<br><br>Olhe o resultado na tela do programa, consulte a Referência de Disco no Jeff Mail e registre tudo no <strong>HIPED v6.0 Pro</strong>!`, 'win-hiped');
+                }, 1000);
+            } else {
+                targetEl.innerText = "8D969EEF6ECAD3C29A3A629280E686CF";
+                out.innerHTML = `<div>Iniciando ataque...</div>`;
+                setTimeout(() => {
+                    out.innerHTML += `<div class="text-yellow-300 font-bold">[HASH CRACKED]: 1995</div>`;
+                    gameState.crackedJohnResult = "1995";
+                    triggerPoliceDispatch(`Hash quebrado com sucesso na tela do programa! Abra o <strong>HIPED v6.0 Pro</strong> para digitar o resultado como Tipo <strong>HASH</strong>.`, 'win-hiped');
+                }, 1000);
+            }
+        }
+
+        // TOOL 4: HEXEDIT LOGIC
+        function loadHexTarget() {
+            playSound('click');
+            const title = document.getElementById('hex-filename');
+            const disp = document.getElementById('hex-display');
+            const phase = phaseDatabase[gameState.currentPhase];
+
+            const mail = phase.mails.find(m => m.id === gameState.selectedMailId) || phase.mails[0];
+
+            title.innerText = `ARQUIVO: ${mail ? mail.attachment : 'SECTOR_0X12_RAW.DAT'}`;
+            disp.innerText = 
+`00000000: 17 04 13 00 2D 05 10 02 46 00 12 88 55 55 55 55  | ....-...F..UUUU
+00000010: CIPHER DATA MATCH FOR ${mail ? mail.id : 'M6_1'}                  | OFFSET XOR55 MATCH`;
+        }
+
+        function applyHexShift() {
+            playSound('click');
+            const key = document.getElementById('hex-shift-key').value.trim().toUpperCase();
+            const phase = phaseDatabase[gameState.currentPhase];
+            const mail = phase.mails.find(m => m.id === gameState.selectedMailId) || phase.mails[0];
+
+            if (key === '0X55' || key === 'KEY' || key !== '') {
+                playSound('win95_boot');
+                const sign = mail ? mail.correctHiped.hash : 'BANK-ZURICH';
+                triggerPoliceDispatch(`Ótimo trabalho! O offset hexadecimal foi descriptografado na tela.<br><br>Anote a assinatura e o Código Ref para validar a prova no <strong>HIPED v6.0 Pro</strong>!`, 'win-hiped');
+            } else {
+                playSound('bsod');
+                alert("Erro de descompressão Hexadecimal! Digite uma chave de shift válida.");
+            }
+        }
+
+        // TOOL 5: STEGOLAB LOGIC
+        function drawStegoCanvas() {
+            const canvas = document.getElementById('stego-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = "#111827";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw bitmap noise
+            for (let i = 0; i < 300; i++) {
+                ctx.fillStyle = `rgba(${Math.random()*255}, ${Math.random()*255}, ${Math.random()*255}, 0.5)`;
+                ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
+            }
+
+            ctx.fillStyle = "#00ff00";
+            ctx.font = "12px monospace";
+            ctx.fillText("[STEGOLAB 95]: LSB BitPlane Viewer", 10, 20);
+        }
+
+        function applyStegoFilter(filterType) {
+            playSound('click');
+            const phase = phaseDatabase[gameState.currentPhase];
+            const textEl = document.getElementById('stego-extracted-text');
+            const canvas = document.getElementById('stego-canvas');
+            const ctx = canvas.getContext('2d');
+
+            drawStegoCanvas();
+
+            const mail = phase.mails.find(m => m.id === gameState.selectedMailId) || phase.mails.find(m => m.stegoText);
+
+            if (mail && mail.stegoText) {
+                ctx.fillStyle = "#ff00ff";
+                ctx.font = "11px monospace";
+                ctx.fillText(`LSB BITPLANE 0 (${mail.id}):`, 10, 80);
+                ctx.fillText(mail.stegoText, 10, 100);
+
+                textEl.innerText = mail.stegoText;
+
+                triggerPoliceDispatch(`Excelente! A mensagem esteganografada foi revelada na tela do StegoLab.<br><br>Anote a frase exibida e o Código Ref do e-mail para cadastrar a prova no <strong>HIPED v6.0 Pro</strong>!`, 'win-hiped');
+            } else {
+                textEl.innerText = "SABOTAGE_PLAN_DELTA";
+                ctx.fillStyle = "#ff00ff";
+                ctx.font = "11px monospace";
+                ctx.fillText("SABOTAGE_PLAN_DELTA", 10, 80);
+            }
+        }
+
+        // TOOL 6: CROSSVAL COMPARISON LOGIC
+        function validateCrossMatch() {
+            playSound('click');
+            const status = document.getElementById('cross-match-status');
+            playSound('win95_boot');
+            status.innerText = "FRAUDE CONFIRMADA: Assinatura do disquete diverge do e-mail!";
+            status.className = "font-bold text-green-700";
+        }
+
+        // TOOL 7: NETSCAPE INTRANET LOGIC
+        function browseIntranetPage() {
+            playSound('click');
+            const viewport = document.getElementById('browser-dynamic-content');
+            const phase = phaseDatabase[gameState.currentPhase];
+
+            if (phase.browserPage) {
+                viewport.innerHTML = `
+                    <div class="font-bold text-blue-900 border-b pb-1">${phase.browserPage.title}</div>
+                    <div class="pt-1 text-gray-800">${phase.browserPage.content}</div>
+                `;
+            } else {
+                viewport.innerHTML = `
+                    <div class="font-bold text-blue-900 border-b pb-1">LOGS DO SISTEMA DE CONTROLE OMEGA (1995)</div>
+                    <div class="pt-1 text-gray-800">Log 0xFA: Chave Master de Desativação do Backdoor = DONETRINO_KILL_SWITCH_1995 [Ref: OMEGA-KEY]</div>
+                `;
+            }
+
+            triggerPoliceDispatch(`Logs da Intranet governamental acessados!<br><br>Anote a Chave Master e a Referência exibidas no navegador e cadastre tudo no <strong>HIPED v6.0 Pro</strong>!`, 'win-hiped');
+        }
+
+        // DISK CARVER LOGIC
+        function renderClusterGrid() {
+            const grid = document.getElementById('cluster-grid');
+            grid.innerHTML = '';
+            const phase = phaseDatabase[gameState.currentPhase];
+
+            for (let i = 0; i < 48; i++) {
+                const block = document.createElement('div');
+                const corruptItem = phase.clusters ? phase.clusters.find(c => c.id === i && c.isCorrupt) : (i === 18 ? { id: 18, isCorrupt: true, name: "DISK_SIGNATURE.DAT", content: "HASH_DISC: BANK-ZURICH | SIGNATURE: PGP-FAKE-95" } : null);
+
+                block.className = `h-7 rounded border flex items-center justify-center font-mono text-[10px] cursor-pointer ${
+                    corruptItem ? 'bg-red-200 border-red-600 text-red-900 font-bold animate-pulse' : 'bg-gray-100 border-gray-400 text-gray-500'
+                }`;
+                block.innerText = corruptItem ? 'CORRUPT' : `0x${i.toString(16).toUpperCase()}`;
+
+                block.onclick = () => selectClusterSector(i, corruptItem);
+                grid.appendChild(block);
+            }
+        }
+
+        function selectClusterSector(sectorNum, corruptItem) {
+            playSound('click');
+            gameState.selectedClusterSector = sectorNum;
+            const status = document.getElementById('carver-file-status');
+            const preview = document.getElementById('carver-file-preview');
+            const btn = document.getElementById('export-floppy-btn');
+
+            if (corruptItem) {
+                status.innerText = `SETOR 0x${sectorNum.toString(16).toUpperCase()} RECONSTRUÍDO: ${corruptItem.name}`;
+                preview.innerText = corruptItem.content;
+                btn.classList.remove('hidden');
+
+                // Populate CrossVal Side B automatically
+                document.getElementById('cross-side-b').innerHTML = `
+                    <div><strong>Setor Disquete:</strong> 0x${sectorNum.toString(16).toUpperCase()}</div>
+                    <div><strong>Arquivo:</strong> ${corruptItem.name}</div>
+                    <div><strong>Conteúdo:</strong> ${corruptItem.content}</div>
+                `;
+
+                triggerPoliceDispatch(`Setor de disquete reconstruído!<br><br>Abra o <strong>HexEdit 95</strong> ou <strong>CrossVal 95</strong> para analisar a assinatura e cadastrar a evidência no HIPED!`, 'win-hex');
+            } else {
+                status.innerText = `SETOR 0x${sectorNum.toString(16).toUpperCase()}: DADOS NORMALIZADOS`;
+                preview.innerText = "Nenhum fragmento de evidência neste setor.";
+                btn.classList.add('hidden');
+            }
+        }
+
+        function exportRecoveredToFloppy() {
+            playSound('floppy');
+            const consoleLog = document.getElementById('hiped-log-console');
+            consoleLog.innerHTML += `<div class="text-cyan-300">[DISQUETE A:\\]: Setor recuperado e salvo no disquete!</div>`;
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+
+            alert("Arquivo de setor recuperado e salvo no Disquete A:\\!");
+        }
+
+        // TOOL 8: CMD TERMINAL SCRIPTING LOGIC
+        function handleCmdKeyDown(e) {
+            if (e.key === 'Enter') {
+                const input = e.target.value.trim();
+                e.target.value = '';
+                if (!input) return;
+
+                playSound('click');
+                const out = document.getElementById('cmd-output');
+                out.innerHTML += `<div><span class="text-green-500">C:\FORENSIC&gt;</span> ${input}</div>`;
+
+                const cmd = input.toUpperCase().split(' ');
+
+                switch (cmd[0]) {
+                    case 'HELP':
+                        out.innerHTML += `
+                            <div>COMANDOS FORENSES DISPONÍVEIS:</div>
+                            <div>- EXIFSCAN : Executa varredura EXIF no anexo</div>
+                            <div>- PCAPVIEW : Exibe captura de pacote PCAP</div>
+                            <div>- JOHN     : Dispara quebra de hash no John</div>
+                            <div>- HEXVIEW  : Inspeciona offsets hexadecimais</div>
+                            <div>- STATUS   : Exibe integridade do Kernel e CPU</div>
+                            <div>- CLS      : Limpa o terminal</div>
+                        `;
+                        break;
+                    case 'EXIFSCAN':
+                        scanExifImage();
+                        out.innerHTML += `<div>[CMD]: ExifTool acionado.</div>`;
+                        break;
+                    case 'PCAPVIEW':
+                        loadPcapStream();
+                        out.innerHTML += `<div>[CMD]: PcapCapture acionado.</div>`;
+                        break;
+                    case 'JOHN':
+                        runJohnRipper();
+                        out.innerHTML += `<div>[CMD]: John the Ripper disparado.</div>`;
+                        break;
+                    case 'HEXVIEW':
+                        loadHexTarget();
+                        out.innerHTML += `<div>[CMD]: HexEdit carregado.</div>`;
+                        break;
+                    case 'STATUS':
+                        out.innerHTML += `<div>[KERNEL HEALTH]: ${Math.floor(gameState.kernelHealth)}% | [CPU TEMP]: ${Math.floor(gameState.cpuTemp)}°C</div>`;
+                        break;
+                    case 'CLS':
+                        out.innerHTML = `<div>Microsoft(R) Windows 95 Forensic Console v3.2</div>`;
+                        break;
+                    default:
+                        out.innerHTML += `<div class="text-red-400">Comando '${cmd[0]}' não reconhecido. Digite 'HELP'.</div>`;
+                        break;
+                }
+
+                out.scrollTop = out.scrollHeight;
+            }
+        }
+
+        // ANTI-BSOD HARDWARE TICK
+        function startHardwareTick() {
+            if (gameState.timerId) clearInterval(gameState.timerId);
+
+            gameState.timerId = setInterval(() => {
+                gameState.cpuTemp += 0.5 + (gameState.currentPhase * 0.15);
+                gameState.kernelHealth = Math.max(0, gameState.kernelHealth - (0.3 + gameState.currentPhase * 0.1));
+
+                document.getElementById('sys-kernel-val').innerText = `${Math.floor(gameState.kernelHealth)}%`;
+                document.getElementById('sys-kernel-bar').style.width = `${Math.floor(gameState.kernelHealth)}%`;
+
+                document.getElementById('sys-temp-val').innerText = `${Math.floor(gameState.cpuTemp)}°C`;
+                document.getElementById('sys-temp-bar').style.width = `${Math.min(100, gameState.cpuTemp)}%`;
+
+                if (gameState.kernelHealth <= 0) {
+                    triggerBSOD("FATAL_EXCEPTION_KERNEL_CORRUPTION");
+                } else if (gameState.cpuTemp >= 100) {
+                    triggerBSOD("HARDWARE_THERMAL_MELTDOWN_CPU");
+                }
+            }, 3000);
+        }
+
+        function coolCPUAction() {
+            playSound('click');
+            gameState.cpuTemp = Math.max(30, gameState.cpuTemp - 20);
+            alert("Resfriamento Ativado: CPU reduzida em -20°C!");
+        }
+
+        function purgeRAMAction() {
+            playSound('click');
+            gameState.kernelHealth = Math.min(100, gameState.kernelHealth + 25);
+            alert("Limpeza Heap Concluída: Integridade do Kernel restaurada!");
+        }
+
+        function triggerBSOD(reason) {
+            playSound('bsod');
+            clearInterval(gameState.timerId);
+
+            document.getElementById('bsod-screen').classList.remove('hidden');
+            document.getElementById('bsod-cause-msg').innerText = `CAUSA DO COLAPSO: ${reason}`;
+        }
+
+        function restartGameToMenuFromBSOD() {
+            playSound('click');
+            document.getElementById('bsod-screen').classList.add('hidden');
+            document.getElementById('main-menu-overlay').classList.remove('hidden');
+
+            // Complete Game Reset back to Main Setup Menu
+            gameState.currentPhase = 1;
+            gameState.kernelHealth = 100;
+            gameState.cpuTemp = 40;
+            gameState.hipedAcceptedEvidences.clear();
+            gameState.selectedMailId = null;
+            gameState.selectedClusterSector = null;
+            gameState.crackedJohnResult = null;
+
+            if (gameState.timerId) clearInterval(gameState.timerId);
+
+            // Hide all active app windows
+            const apps = ['win-objectives', 'win-readme', 'win-mail', 'win-hiped', 'win-cmd', 'win-hex', 'win-exif', 'win-pcap', 'win-john', 'win-stego', 'win-cross', 'win-browser', 'win-disk', 'win-sys', 'police-dispatch-modal'];
+            apps.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            updateTaskbar();
+        }
+
+        // CLOCK TICK
+        setInterval(() => {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = now.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            const strTime = `${hours < 10 ? '0' + hours : hours}:${minutes < 10 ? '0' + minutes : minutes} ${ampm}`;
+            const clockEl = document.getElementById('win95-clock');
+            if (clockEl) clockEl.innerText = strTime;
+        }, 1000);
+
+        document.body.addEventListener('click', () => { initAudio(); }, { once: true });
+    </script>
+</body>
+</html>
